@@ -38,7 +38,7 @@ echo RUNNING: TASK_NAME SRC_LEN MODEL_NAME MODEL_CLS N_SEG MEMORY_SIZE INPUT_SEQ
 echo RUNNING: $TASK_NAME $SRC_LEN $MODEL_NAME $MODEL_CLS $MAX_N_SEGMENTS $MEMORY_SIZE $INPUT_SEQ_LEN $LR $N $ITERS $D_MEM
 accelerate launch --num_processes $NP --config_file $ACCEL_CONFIG run_finetuning_reasoning_rmt.py \
         --task_name $TASK_NAME \
-        --dataset_name "booydar/4_by_4_mult" \
+        --dataset_name "booydar/multiplication_4x4" \
         --output_dir /workspace-SR006.nfs2/Bulatov_A/rmt/runs/${TASK_NAME}/${MODEL_NAME}/SEGM_${MAX_N_SEGMENTS}x${INPUT_SIZE}_${INPUT_SEQ_LEN}_LR${LR} \
         --from_pretrained $MODEL_NAME \
         --model_type $MODEL_TYPE \

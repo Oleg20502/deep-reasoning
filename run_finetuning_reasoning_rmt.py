@@ -206,24 +206,35 @@ if __name__ == '__main__':
 
 
     id_pad_value = tokenizer.pad_token_id if tokenizer.pad_token_id is not None else tokenizer.eos_token_id
-    if args.use_cot in (False, None):
-        inputs_key = 'examples_nocot'
-        labels_key = 'labels_nocot'
-    else:
-        inputs_key = 'examples_all'
-        labels_key = 'labels_all'
-        
+    think = ans = tokenizer.bos_token_id
+    eos = tokenizer.eos_token_id
     def collate_fn(batch):
-        input_ids = [torch.tensor(b[inputs_key]) for b in batch]
-        labels = [torch.tensor(b[labels_key]) for b in batch]
-        attention_mask = [torch.ones_like(b, dtype=int) for b in input_ids]
-        # labels_mask defines which input_ids participate in loss calculation
-        labels_mask = [torch.sign(torch.tensor(b[labels_key])) for b in batch]
+        input_ids, labels, labels_mask, attention_mask = [], [], [], []
+        for sample in batch:
+            task, lab, cot = sample['task'], sample['labels'], sample['cot']
+            task_tokens = tokenizer.encode(task, add_special_tokens=False)
+            labels_tokens = tokenizer.encode(lab, add_special_tokens=False)
+            cot_tokens = tokenizer.encode(cot, add_special_tokens=False)
 
+            if args.use_cot:
+                full_input = task_tokens + [think] + cot_tokens + [ans] + labels_tokens + [eos]
+            else:
+                full_input = task_tokens + [ans] + labels_tokens + [eos]
+            inp_ids = torch.tensor(full_input)
+            input_ids.append(inp_ids)
 
+            lab = torch.tensor(full_input)
+            lab[:len(task_tokens)] = -100
+            labels.append(lab)
+
+            lab_mask = torch.ones_like(inp_ids)
+            lab_mask[:len(task_tokens)] = 0
+            labels_mask.append(lab_mask)
+            attention_mask.append(torch.ones_like(inp_ids))
+            
         input_ids = pad_sequence(input_ids, padding_value=id_pad_value, batch_first=True)
-        labels = pad_sequence(labels, padding_value=id_pad_value, batch_first=True)
         attention_mask = pad_sequence(attention_mask, padding_value=0, batch_first=True)
+        labels = pad_sequence(labels, padding_value=id_pad_value, batch_first=True)
         labels_mask = pad_sequence(labels_mask, padding_value=0, batch_first=True)
 
         collated = {'input_ids': input_ids,
@@ -408,34 +419,32 @@ if __name__ == '__main__':
         model.to(torch.bfloat16)
     training_args = SFTConfig(**training_args_dict)
 
-    import torch.nn.functional as F
+    think_text = tokenizer.decode(think)
+    ans_text = tokenizer.decode(ans)
 
     def extract_cot(text):
-        if '<|endoftext|>' not in text:
+        try:
+            start_index = text.index(think_text)
+            end_index = text.index(ans_text, start_index + len(think_text))
+            return text[start_index + len(think_text):end_index]
+        except ValueError:
             return ''
-        else:
-            return text.split('<|endoftext|>')[0].strip()
 
     def extract_answer(text):
-        if '####' not in text:
+        try:
+            return text.split(ans_text)[-2]
+        except IndexError:
             return ''
-        else:
-            ans = text.split('####')[-1]
-            ans = ans.split('<|endoftext|>')[0]
-            return ans.strip()
             
     def compute_accuracy(eval_pred):
         preds = eval_pred.predictions.argmax(axis=-1)[:, :-1]
         labels = eval_pred.label_ids[:, 1:]
-        print("preds.shape, labels.shape")
-        print(preds.shape, labels.shape)
 
         labels_masks = labels > 0
         preds_full = [p[m] for p, m in zip(preds, labels_masks)]
         labels_full = [l[m] for l, m in zip(labels, labels_masks)]
 
         print(len(preds_full), len(labels_full))
-        # print(preds_full, labels_full)
 
         preds_full_text = tokenizer.batch_decode(preds_full, add_special_tokens=True)
         labels_full_text = tokenizer.batch_decode(labels_full, add_special_tokens=True)
