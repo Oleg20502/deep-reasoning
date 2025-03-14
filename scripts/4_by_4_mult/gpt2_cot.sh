@@ -38,8 +38,8 @@ echo RUNNING: TASK_NAME SRC_LEN MODEL_NAME MODEL_CLS N_SEG MEMORY_SIZE INPUT_SEQ
 echo RUNNING: $TASK_NAME $SRC_LEN $MODEL_NAME $MODEL_CLS $MAX_N_SEGMENTS $MEMORY_SIZE $INPUT_SEQ_LEN $LR $N $ITERS $D_MEM
 accelerate launch --num_processes $NP --config_file $ACCEL_CONFIG run_finetuning_reasoning_rmt.py \
         --task_name $TASK_NAME \
-        --dataset_dir "/workspace-SR006.nfs2/Bulatov_A/rmt/data/implicit_chain_of_thought/" \
-        --output_dir /workspace-SR006.nfs2/Bulatov_A/rmt/runs/test/${TASK_NAME}/${MODEL_NAME}/SEGM_${MAX_N_SEGMENTS}x${INPUT_SIZE}_${INPUT_SEQ_LEN}_LR${LR}-cot \
+        --dataset_name "booydar/4_by_4_mult" \
+        --output_dir /workspace-SR006.nfs2/Bulatov_A/rmt/runs/${TASK_NAME}/${MODEL_NAME}/SEGM_${MAX_N_SEGMENTS}x${INPUT_SIZE}_${INPUT_SEQ_LEN}_LR${LR}-cot \
         --from_pretrained $MODEL_NAME \
         --model_type $MODEL_TYPE \
         --memory_cell_cls $MEMORY_CELL \

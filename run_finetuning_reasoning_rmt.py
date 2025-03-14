@@ -46,6 +46,7 @@ parser = HfArgumentParser(SFTConfig)
 # parser.add_argument('--task_names', type=str, help="Task names, separated by : , wikitext:arxiv: ...")
 parser.add_argument('--task_name', type=str, help="Task name, wikitext:arxiv ...")
 parser.add_argument('--dataset_dir', type=str, default=None, help="path to local dataset dir")
+parser.add_argument('--dataset_name', type=str, default=None, help="name of HF dataset")
 parser.add_argument('--task_ratios', type=str, help="Task rations, separated by : , 0.1:0.8: ..., sup up to 1")
 parser.add_argument('--append_concat_token', action='store_true', default=False, help="Append concat token during packing")
 parser.add_argument('--validate_only', action='store_true', default=False,
@@ -188,7 +189,7 @@ if __name__ == '__main__':
     if args.dataset_name is not None:
         hf_dataset = datasets.load_dataset(args.dataset_name)
         train_dataset = hf_dataset["train"]
-        valid_dataset = hf_dataset["validation"]
+        valid_dataset = hf_dataset["valid"]
         if "test" in hf_dataset:
             test_dataset = hf_dataset["test"]
         else:
@@ -309,7 +310,7 @@ if __name__ == '__main__':
             mem_cell_args['attend_to_previous_input'] = args.attend_to_previous_input
         cell = memory_cell_cls(**mem_cell_args)
         model = recurrent_wrapper_cls(cell,
-                                      segment_size=block_size,
+                                      segment_size=args.segment_size,
                                       max_n_segments=args.max_n_segments,
                                       vary_n_segments=args.vary_n_segments,
                                       k2=args.k2,
