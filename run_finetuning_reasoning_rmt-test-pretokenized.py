@@ -1,6 +1,7 @@
 import logging
 import os
 from pathlib import Path
+from itertools import chain
 from datetime import timedelta
 import torch
 import numpy as np
@@ -12,14 +13,8 @@ from transformers import EarlyStoppingCallback, set_seed
 
 from torch.nn.utils.rnn import pad_sequence
 
-import accelerate
+import accelerate   
 from peft import get_peft_model, LoraConfig, TaskType
-
-# import transformers  # noqa: E402
-from transformers import AutoConfig, AutoTokenizer, HfArgumentParser  # noqa: E402
-
-# from lm_experiments_tools.utils import get_cls_by_name, get_optimizer, prepare_run  # noqa: E402
-from lm_experiments_tools.utils import get_cls_by_name
 
 logger_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 logging.basicConfig(format=logger_fmt, level=logging.INFO)
@@ -33,6 +28,12 @@ if os.environ.get('CUDA_VISIBLE_DEVICES', None) is None:
 logger.info(f"CUDA_VISIBLE_DEVICES: {os.environ['CUDA_VISIBLE_DEVICES']}")
 # first call to torch.cuda.device_count() sets visible gpus, following calls will not change the result
 logger.info(f"CUDA DEVICE COUNT: {torch.cuda.device_count()}")
+
+# import transformers  # noqa: E402
+from transformers import AutoConfig, AutoTokenizer, HfArgumentParser  # noqa: E402
+
+# from lm_experiments_tools.utils import get_cls_by_name, get_optimizer, prepare_run  # noqa: E402
+from lm_experiments_tools.utils import get_cls_by_name
 
 # limit # of CPU threads to be used per pytorch worker, otherwise it might use all cpus and throttle gpus
 # > 2 fails cause of https://github.com/pytorch/pytorch/issues/56615
@@ -66,8 +67,7 @@ parser.add_argument('--reduce_eval', type=float, default=None, help='part of eva
 parser.add_argument('--no_packing', action='store_true', help='disable packing, add padding', default=False)
 parser.add_argument('--padding_side', type=str, help='set padding side', default=False)
 parser.add_argument('--truncate_before', type=int, default=0, help='truncate input before defined ids, for debug only')
-parser.add_argument('--truncate_only_train', action='store_true', help='set truncate input before defined ids only for train, \
-                    for debug only', default=False)
+parser.add_argument('--truncate_only_train', action='store_true', help='set truncate input before defined ids only for train, for debug only', default=False)
 
 # reasoning args
 parser.add_argument('--use_cot', action='store_true', help='use chain of thought examples')
@@ -164,8 +164,7 @@ if __name__ == '__main__':
     set_seed(args.seed)
 
     # workaround with setting bigger tiomeout for NCCL (useful for big dataset, to avoid timeout at tokenization)
-    accelerator = accelerate.Accelerator(gradient_accumulation_steps=args.gradient_accumulation_steps,
-                                         kwargs_handlers=[accelerate.InitProcessGroupKwargs(timeout=timedelta(seconds=20 * 1800))])
+    accelerator = accelerate.Accelerator(gradient_accumulation_steps=args.gradient_accumulation_steps, kwargs_handlers=[accelerate.InitProcessGroupKwargs(timeout=timedelta(seconds=20 * 1800))])
     from accelerate.logging import get_logger
     logger = get_logger('')
 
@@ -186,7 +185,7 @@ if __name__ == '__main__':
         tokenizer.padding_side = args.padding_side
     # Prepare datasets
     logger.info(f'preparing dataset for {args.task_name}')
-
+    
     if args.dataset_name is not None:
         hf_dataset = datasets.load_dataset(args.dataset_name)
         train_dataset = hf_dataset["train"]
@@ -205,41 +204,30 @@ if __name__ == '__main__':
         else:
             test_dataset = datasets.load_from_disk(os.path.join(dataset_path, "valid"))
 
+
     id_pad_value = tokenizer.pad_token_id if tokenizer.pad_token_id is not None else tokenizer.eos_token_id
-    think = ans = tokenizer.bos_token_id
-    eos = tokenizer.eos_token_id
-
+    if args.use_cot in (False, None):
+        inputs_key = 'examples_nocot'
+        labels_key = 'labels_nocot'
+    else:
+        inputs_key = 'examples_all'
+        labels_key = 'labels_all'
+        
     def collate_fn(batch):
-        input_ids, labels, labels_mask, attention_mask = [], [], [], []
-        for sample in batch:
-            task, lab, cot = sample['task'], sample['labels'], sample['cot']
-            task_tokens = tokenizer.encode(task, add_special_tokens=False)
-            labels_tokens = tokenizer.encode(lab, add_special_tokens=False)
-            cot_tokens = tokenizer.encode(cot, add_special_tokens=False)
+        input_ids = [torch.tensor(b[inputs_key]) for b in batch]
+        labels = [torch.tensor(b[labels_key]) for b in batch]
+        attention_mask = [torch.ones_like(b, dtype=int) for b in input_ids]
+        # labels_mask defines which input_ids participate in loss calculation
+        labels_mask = [torch.sign(torch.tensor(b[labels_key])) for b in batch]
 
-            if args.use_cot:
-                full_input = task_tokens + [think] + cot_tokens + [ans] + labels_tokens + [eos]
-            else:
-                full_input = task_tokens + [ans] + labels_tokens + [eos]
-            inp_ids = torch.tensor(full_input)
-            input_ids.append(inp_ids)
-
-            lab = torch.tensor(full_input)
-            lab[:len(task_tokens)] = -100
-            labels.append(lab)
-
-            lab_mask = torch.ones_like(inp_ids)
-            lab_mask[:len(task_tokens)] = 0
-            labels_mask.append(lab_mask)
-            attention_mask.append(torch.ones_like(inp_ids))
 
         input_ids = pad_sequence(input_ids, padding_value=id_pad_value, batch_first=True)
-        attention_mask = pad_sequence(attention_mask, padding_value=0, batch_first=True)
         labels = pad_sequence(labels, padding_value=id_pad_value, batch_first=True)
+        attention_mask = pad_sequence(attention_mask, padding_value=0, batch_first=True)
         labels_mask = pad_sequence(labels_mask, padding_value=0, batch_first=True)
 
         collated = {'input_ids': input_ids,
-                    'labels': labels,
+                    'labels': labels, 
                     'attention_mask': attention_mask,
                     }
         if args.num_mem_tokens is not None:
@@ -268,7 +256,7 @@ if __name__ == '__main__':
 
         model.load_state_dict(base_model.state_dict(), strict=False)
         del base_model
-        logger.info('Added adapters')
+        logger.info(f'Added adapters')
     else:
         # TODO: fix if for Qwen and Llama
         if not args.from_pretrained:
@@ -280,6 +268,7 @@ if __name__ == '__main__':
                 model = model_cls.from_pretrained(args.from_pretrained,
                                                   attn_implementation="flash_attention_2",
                                                   torch_dtype=torch.bfloat16,
+                                                  #device_map="cuda",
                                                   trust_remote_code=True)
             else:
                 model = model_cls.from_pretrained(args.from_pretrained, use_safetensors=False)
@@ -292,9 +281,9 @@ if __name__ == '__main__':
             lora_dropout=args.lora_dropout
             )
         model = get_peft_model(model, peft_config)
-        logger.info('Added LoRA, trainable parameters with LoRA only:')
+        logger.info(f'Added LoRA, trainable parameters with LoRA only:')
         model.print_trainable_parameters()
-    # load cpt of backbone model
+    ## load cpt of backbone model
     if args.backbone_cpt:
         backbone_cpt = os.path.join(args.backbone_cpt, "model_best.pth")
         cpt = torch.load(backbone_cpt, map_location='cpu')
@@ -313,7 +302,7 @@ if __name__ == '__main__':
         if args.d_mem is not None:
             mem_cell_args['d_mem'] = args.d_mem
             mem_cell_args['wrap_pos'] = args.wrap_pos
-            mem_cell_args['correction'] = not args.no_correction
+            mem_cell_args['correction'] = not(args.no_correction)
             # mem_cell_args['use_lora'] = args.use_lora
         if args.layers_attr is not None:
             mem_cell_args['layers_attr'] = args.layers_attr
@@ -327,8 +316,8 @@ if __name__ == '__main__':
                                       k2=args.k2,
                                       attend_to_previous_input=args.attend_to_previous_input,
                                       return_all_logits=False,
-                                      )
-        # load cpt of rmt
+        )
+        ## load cpt of rmt
         if args.model_cpt:
             if "safetensors" in args.model_cpt:
                 print(model)
@@ -346,7 +335,7 @@ if __name__ == '__main__':
                 cpt = torch.load(model_cpt, map_location='cpu')
                 model.load_state_dict(cpt, strict=False)
             logger.info(f'Loaded RMT state dict from: {args.model_cpt}')
-        logger.info('Trainable parameters after adding RMT/ARMT:')
+        logger.info(f'Trainable parameters after adding RMT/ARMT:')
         logger.info(f'Remaining parameters: {[n for n, p in model.named_parameters() if p.requires_grad]}')
     if args.add_lora_to_armt:
         peft_config = LoraConfig(
@@ -358,7 +347,7 @@ if __name__ == '__main__':
             )
         # add LoRA only to the inner model
         model.memory_cell.model = get_peft_model(model.memory_cell.model, peft_config)
-        logger.info('Added LoRA, trainable parameters with LoRA only:')
+        logger.info(f'Added LoRA, trainable parameters with LoRA only:')
         model.memory_cell.model.print_trainable_parameters()
         # print(model)
     if args.freeze_model_weights:
@@ -367,7 +356,7 @@ if __name__ == '__main__':
                 p.requires_grad = False
             else:
                 p.requires_grad = True
-        logger.info('Frozen model weights')
+        logger.info(f'Frozen model weights')
         logger.info(f'Remaining parameters: {[n for n, p in model.named_parameters() if p.requires_grad]}')
     if args.tune_only_memory:
         for n, p in model.named_parameters():
@@ -375,7 +364,7 @@ if __name__ == '__main__':
                 p.requires_grad = False
             else:
                 p.requires_grad = True
-        logger.info('Frozen model weights')
+        logger.info(f'Frozen model weights')
         logger.info(f'Remaining parameters: {[n for n, p in model.named_parameters() if p.requires_grad]}')
     if args.tune_only_armt:
         for n, p in model.named_parameters():
@@ -383,9 +372,8 @@ if __name__ == '__main__':
                 p.requires_grad = False
             else:
                 p.requires_grad = True
-        logger.info('Frozen model weights')
+        logger.info(f'Frozen model weights')
         logger.info(f'Remaining parameters: {[n for n, p in model.named_parameters() if p.requires_grad]}')
-
     # fix the not-contiguous error
     def make_contiguous(module):
         with torch.no_grad():
@@ -420,32 +408,34 @@ if __name__ == '__main__':
         model.to(torch.bfloat16)
     training_args = SFTConfig(**training_args_dict)
 
-    think_text = tokenizer.decode(think)
-    ans_text = tokenizer.decode(ans)
+    import torch.nn.functional as F
 
     def extract_cot(text):
-        try:
-            start_index = text.index(think_text)
-            end_index = text.index(ans_text, start_index + len(think_text))
-            return text[start_index + len(think_text):end_index]
-        except ValueError:
+        if '<|endoftext|>' not in text:
             return ''
+        else:
+            return text.split('<|endoftext|>')[0].strip()
 
     def extract_answer(text):
-        try:
-            return text.split(ans_text)[2]
-        except IndexError:
+        if '####' not in text:
             return ''
-
+        else:
+            ans = text.split('####')[-1]
+            ans = ans.split('<|endoftext|>')[0]
+            return ans.strip()
+            
     def compute_accuracy(eval_pred):
         preds = eval_pred.predictions.argmax(axis=-1)[:, :-1]
         labels = eval_pred.label_ids[:, 1:]
+        print("preds.shape, labels.shape")
+        print(preds.shape, labels.shape)
 
         labels_masks = labels > 0
         preds_full = [p[m] for p, m in zip(preds, labels_masks)]
-        labels_full = [lab[m] for lab, m in zip(labels, labels_masks)]
+        labels_full = [l[m] for l, m in zip(labels, labels_masks)]
 
         print(len(preds_full), len(labels_full))
+        # print(preds_full, labels_full)
 
         preds_full_text = tokenizer.batch_decode(preds_full, add_special_tokens=True)
         labels_full_text = tokenizer.batch_decode(labels_full, add_special_tokens=True)
@@ -453,11 +443,11 @@ if __name__ == '__main__':
         preds_cot = [extract_cot(p) for p in preds_full_text]
         preds_ans = [extract_answer(p) for p in preds_full_text]
 
-        labels_cot = [extract_cot(lab) for lab in labels_full_text]
-        labels_ans = [extract_answer(lab) for lab in labels_full_text]
-
-        acc_cot = np.mean([c == p for c, p in zip(preds_cot, labels_cot)])
-        acc_ans = np.mean([c == lab for c, lab in zip(preds_ans, labels_ans)])
+        labels_cot = [extract_cot(l) for l in labels_full_text]
+        labels_ans = [extract_answer(l) for l in labels_full_text]
+        
+        acc_cot = np.mean([c == l for c, l in zip(preds_cot, labels_cot)])
+        acc_ans = np.mean([c == l for c, l in zip(preds_ans, labels_ans)])
 
         return {'accuracy_cot': acc_cot, 'accuracy_ans': acc_ans}
 
