@@ -7,6 +7,8 @@ import numpy as np
 import datasets
 from trl import SFTTrainer, SFTConfig
 from transformers import EarlyStoppingCallback, set_seed
+from torch.optim.lr_scheduler import LambdaLR
+from torch.optim import AdamW
 # from lm_experiments_tools.dataset_preprocessing import load_and_preprocess_task, combine_datasets
 # from lm_experiments_tools.instruction_utils import mask_non_completion, mask_non_completion_multi
 
@@ -152,6 +154,8 @@ parser.add_argument('--warmup_init', action='store_true', default=False,
                     help='Adafactor warmup_init (default: False)')
 parser.add_argument('--early_stopping_patience', type=int, default=-1,
                     help='Early stopping tolerance')
+parser.add_argument('--min_lr', type=float, default=0,
+                    help='Minimum learning rate for the scheduler')
 
 # LoRA args
 parser.add_argument('--use_lora', action='store_true', default=False, help='')
@@ -474,6 +478,15 @@ if __name__ == '__main__':
 
         return {'accuracy_cot': acc_cot, 'accuracy_ans': acc_ans}
 
+    def lr_lambda(current_step):
+        if current_step < training_args.warmup_steps:
+            return current_step / training_args.warmup_steps
+        decay_factor = (training_args.max_steps - current_step) / (training_args.max_steps - training_args.warmup_steps)
+        return max(args.min_lr / training_args.learning_rate, decay_factor)
+
+    optimizer = AdamW(model.parameters(), lr=training_args.learning_rate)
+    scheduler = LambdaLR(optimizer, lr_lambda)
+
     trainer = SFTTrainer(
         model=model,
         args=training_args,
@@ -481,7 +494,8 @@ if __name__ == '__main__':
         eval_dataset=valid_dataset,
         tokenizer=tokenizer,
         data_collator=collate_fn,
-        compute_metrics=compute_accuracy
+        compute_metrics=compute_accuracy,
+        optimizers=(optimizer, scheduler)
     )
     logger.info(f"Trainer Gradient Checkpointing Enabled: {trainer.args.gradient_checkpointing}")
     if args.early_stopping_patience != -1:

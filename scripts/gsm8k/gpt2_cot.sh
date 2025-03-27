@@ -26,7 +26,7 @@ for N in 1; do
     for LR in 1e-04; do
         GRADIENT_ACC_STEP=$((TBS/(BS*NP)))
         ACCEL_CONFIG="/workspace-SR006.nfs2/bulatov/rmt/reasoning/deep-reasoning/accel_configs/accelerate_bf16.yaml"
-        MAIN_SCRIPT="/workspace-SR006.nfs2/bulatov/rmt/reasoning/deep-reasoning/run_finetuning_reasoning_rmt.py"
+        MAIN_SCRIPT="/workspace-SR006.nfs2/bulatov/rmt/reasoning/deep-reasoning/run_finetuning_reasoning.py"
 
         echo "RUNNING: TASK_NAME SRC_LEN MODEL_NAME MODEL_CLS N_SEG MEMORY_SIZE INPUT_SEQ_LEN LR N"
         echo "RUNNING: $TASK_NAME $SRC_LEN $MODEL_NAME $MODEL_CLS $MAX_N_SEGMENTS $MEMORY_SIZE $INPUT_SEQ_LEN $LR $N $ITERS $D_MEM"

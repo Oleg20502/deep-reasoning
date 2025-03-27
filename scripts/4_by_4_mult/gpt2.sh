@@ -26,7 +26,7 @@ for N in 1; do
     for LR in 1e-04; do
         GRADIENT_ACC_STEP=$((TBS/(BS*NP)))
         ACCEL_CONFIG="/workspace-SR006.nfs2/bulatov/rmt/reasoning/deep-reasoning/accel_configs/accelerate_bf16.yaml"
-        MAIN_SCRIPT="/workspace-SR006.nfs2/bulatov/rmt/reasoning/deep-reasoning/run_finetuning_reasoning_rmt.py"
+        MAIN_SCRIPT="/workspace-SR006.nfs2/bulatov/rmt/reasoning/deep-reasoning/run_finetuning_reasoning.py"
 
         echo "RUNNING: TASK_NAME SRC_LEN MODEL_NAME MODEL_CLS N_SEG MEMORY_SIZE INPUT_SEQ_LEN LR N"
         echo "RUNNING: $TASK_NAME $SRC_LEN $MODEL_NAME $MODEL_CLS $MAX_N_SEGMENTS $MEMORY_SIZE $INPUT_SEQ_LEN $LR $N $ITERS $D_MEM"
@@ -52,6 +52,7 @@ for N in 1; do
         --k1 -1 --k2 -1 \
         --optimizer AdamW --weight_decay 0.001 \
         --learning_rate ${LR} --lr_scheduler_type $SCHEDULER --warmup_steps 3000 \
+        --scheduler_steps $((2*ITERS)) \
         --data_n_workers 2 \
         --logging_steps 50 --eval_steps 250 --save_steps 500 \
         --show_valid_examples 0 \
