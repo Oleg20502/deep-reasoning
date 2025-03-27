@@ -1,6 +1,7 @@
 import logging
 import os
 from pathlib import Path
+from itertools import chain
 from datetime import timedelta
 import torch
 import numpy as np
@@ -12,16 +13,8 @@ from transformers import EarlyStoppingCallback, set_seed
 
 from torch.nn.utils.rnn import pad_sequence
 
-import accelerate
+import accelerate   
 from peft import get_peft_model, LoraConfig, TaskType
-
-# import transformers  # noqa: E402
-from transformers import AutoConfig, AutoTokenizer, HfArgumentParser  # noqa: E402
-
-# from lm_experiments_tools.utils import get_cls_by_name, get_optimizer, prepare_run  # noqa: E402
-from lm_experiments_tools.utils import get_cls_by_name
-
-from utils.reasoning import make_segment, split_cot
 
 logger_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 logging.basicConfig(format=logger_fmt, level=logging.INFO)
@@ -36,6 +29,12 @@ logger.info(f"CUDA_VISIBLE_DEVICES: {os.environ['CUDA_VISIBLE_DEVICES']}")
 # first call to torch.cuda.device_count() sets visible gpus, following calls will not change the result
 logger.info(f"CUDA DEVICE COUNT: {torch.cuda.device_count()}")
 
+# import transformers  # noqa: E402
+from transformers import AutoConfig, AutoTokenizer, HfArgumentParser  # noqa: E402
+
+# from lm_experiments_tools.utils import get_cls_by_name, get_optimizer, prepare_run  # noqa: E402
+from lm_experiments_tools.utils import get_cls_by_name
+
 # limit # of CPU threads to be used per pytorch worker, otherwise it might use all cpus and throttle gpus
 # > 2 fails cause of https://github.com/pytorch/pytorch/issues/56615
 # need to upgrade to torch>1.8.1
@@ -49,8 +48,7 @@ parser.add_argument('--task_name', type=str, help="Task name, wikitext:arxiv ...
 parser.add_argument('--dataset_dir', type=str, default=None, help="path to local dataset dir")
 parser.add_argument('--dataset_name', type=str, default=None, help="name of HF dataset")
 parser.add_argument('--task_ratios', type=str, help="Task rations, separated by : , 0.1:0.8: ..., sup up to 1")
-parser.add_argument('--append_concat_token', action='store_true', default=False,
-                    help="Append concat token during packing")
+parser.add_argument('--append_concat_token', action='store_true', default=False, help="Append concat token during packing")
 parser.add_argument('--validate_only', action='store_true', default=False,
                     help='Skip training and run only validation. (default: False)')
 parser.add_argument('--working_dir', type=str, default='.',
@@ -63,16 +61,13 @@ parser.add_argument('--data_n_workers', type=int, default=2, help='number of dat
 parser.add_argument('--input_prefix', type=str, default='', help='add task prefix to an input string (default: "")')
 parser.add_argument('--sliding_window', action='store_true', help='use slinding window attentinon mask, '
                     'eval on last segment only', default=False)
-parser.add_argument('--attend_to_previous_input', action='store_true', help='attend to the previous segment',
-                    default=False)
-parser.add_argument('--use_length_filtering', action='store_true', help='filter samples longer than train len',
-                    default=False)
+parser.add_argument('--attend_to_previous_input', action='store_true', help='attend to the previous segment', default=False)
+parser.add_argument('--use_length_filtering', action='store_true', help='filter samples longer than train len', default=False)
 parser.add_argument('--reduce_eval', type=float, default=None, help='part of eval to use')
 parser.add_argument('--no_packing', action='store_true', help='disable packing, add padding', default=False)
 parser.add_argument('--padding_side', type=str, help='set padding side', default=False)
 parser.add_argument('--truncate_before', type=int, default=0, help='truncate input before defined ids, for debug only')
-parser.add_argument('--truncate_only_train', action='store_true',
-                    help='set truncate input before defined ids only for train for debug only', default=False)
+parser.add_argument('--truncate_only_train', action='store_true', help='set truncate input before defined ids only for train, for debug only', default=False)
 
 # reasoning args
 parser.add_argument('--use_cot', action='store_true', help='use chain of thought examples')
@@ -88,38 +83,31 @@ parser.add_argument('--model_cpt', type=str, default=None, help='pretrained mode
 parser.add_argument('--model_type', type=str, default='encoder-decoder',
                     help='model type, encoder, encoder-decoder, decoder, affects preprocessing '
                          '(default: encoder-decoder)')
-parser.add_argument('--checkpoint', type=str, default=None,
-                    help='Full experiment checkpoint, used to resume training in SFTTrainer')
+parser.add_argument('--checkpoint', type=str, default=None, help='Full experiment checkpoint, used to resume training in SFTTrainer')
 
 # Aydar # RMT args
 parser.add_argument('--segment_size', type=int, default=None, help='maximal input size of the backbone model')
 parser.add_argument('--num_mem_tokens', type=int, default=None, help='number of memory tokens.')
 parser.add_argument('--max_n_segments', type=int, default=1, help='maximal segment number')
-parser.add_argument('--vary_n_segments', action='store_true', default=False,
-                    help='Randomly choose segment number from 1 to max_n_segments')
-parser.add_argument('--loss_from_last_seg_only', action='store_true', default=False,
-                    help='take loss from last segment only')
-parser.add_argument('--no_loss_from_first_segment', action='store_true', default=False,
-                    help='turn off loss from first segment')
+parser.add_argument('--vary_n_segments', action='store_true', default=False, help='Randomly choose segment number from 1 to max_n_segments')
+parser.add_argument('--loss_from_last_seg_only', action='store_true', default=False, help='take loss from last segment only')
+parser.add_argument('--no_loss_from_first_segment', action='store_true', default=False, help='turn off loss from first segment')
 parser.add_argument('--sum_loss', action='store_true', default=False,
                     help='with this flag task loss from all segments is summed')
-parser.add_argument('--bptt_depth', type=int, default=-1, help='max num of previous segments in gradient computation.')
+parser.add_argument('--bptt_depth', type=int, default=-1, help='max number of previous segments in gradient computation.')
 parser.add_argument('--segment_ordering', type=str, help='segment order', default='regular',
                     choices=['regular', 'reversed', 'bidirectional', 'repeat_first', 'last_memory_only'])
 parser.add_argument('--memory_forward_func', type=str, help='path to memory forward funсtion script', default=None)
-parser.add_argument('--memory_layers', type=str, help='memory-augmented layer inds or "all" for all layers',
-                    default=None)
+parser.add_argument('--memory_layers', type=str, help='memory-augmented layer inds or "all" for all layers', default=None)
 parser.add_argument('--share_memory_layers', action='store_true', help='share weights of memory layers', default=False)
 parser.add_argument('--reconstruction_loss_coef', type=float, default=None,
                     help='reconstuction loss ratio in total loss')
 # parser.add_argument('--segment_ordering', type=str,help='????', default='regular',
 #                     choices=['regular', 'reversed', 'bidirectional', 'repeat_first', 'last_memory_only'])
-parser.add_argument('--retain_graph', action='store_true', help='Retain computation graph during backward pass',
-                    default=False)
+parser.add_argument('--retain_graph', action='store_true', help='Retain computation graph during backward pass', default=False)
 parser.add_argument('--use_truncated_backward', action='store_true', default=False,
                     help='whether to use RMT truncated bptt method in backward')
-parser.add_argument('--k1', type=int, default=-1,
-                    help='(not implemented) If not -1, gradient update is done each k1 segments')
+parser.add_argument('--k1', type=int, default=-1, help='(not implemented) If not -1, gradient update is done each k1 segments')
 parser.add_argument('--k2', type=int, default=-1, help='number of last segments used by backward')
 parser.add_argument('--freeze_model_weights', action='store_true', default=False,
                     help='Stop training all model weights except memory layers')
@@ -141,8 +129,7 @@ parser.add_argument('--wrap_pos', action='store_true', default=False,
 
 # tokenizer
 parser.add_argument('--tokenizer', type=str, default=None, help='path or name of pre-trained HF Tokenizer')
-parser.add_argument('--tokenizer_for_chat_template', type=str, default=None,
-                    help='path or name of pre-trained HF Tokenizer, from which CT are used')
+parser.add_argument('--tokenizer_for_chat_template', type=str, default=None, help='path or name of pre-trained HF Tokenizer, from which CT are used')
 
 # optimizer args
 parser.add_argument('--optimizer', type=str, default='AdamW', help='optimizer name: AdamW, Adafactor. (default: AdamW)')
@@ -177,9 +164,7 @@ if __name__ == '__main__':
     set_seed(args.seed)
 
     # workaround with setting bigger tiomeout for NCCL (useful for big dataset, to avoid timeout at tokenization)
-    timeout = timedelta(seconds=20 * 1800)
-    accelerator = accelerate.Accelerator(gradient_accumulation_steps=args.gradient_accumulation_steps,
-                                         kwargs_handlers=[accelerate.InitProcessGroupKwargs(timeout=timeout)])
+    accelerator = accelerate.Accelerator(gradient_accumulation_steps=args.gradient_accumulation_steps, kwargs_handlers=[accelerate.InitProcessGroupKwargs(timeout=timedelta(seconds=20 * 1800))])
     from accelerate.logging import get_logger
     logger = get_logger('')
 
@@ -200,7 +185,7 @@ if __name__ == '__main__':
         tokenizer.padding_side = args.padding_side
     # Prepare datasets
     logger.info(f'preparing dataset for {args.task_name}')
-
+    
     if args.dataset_name is not None:
         hf_dataset = datasets.load_dataset(args.dataset_name)
         train_dataset = hf_dataset["train"]
@@ -219,63 +204,36 @@ if __name__ == '__main__':
         else:
             test_dataset = datasets.load_from_disk(os.path.join(dataset_path, "valid"))
 
+
     id_pad_value = tokenizer.pad_token_id if tokenizer.pad_token_id is not None else tokenizer.eos_token_id
-    think = tokenizer.encode('????')
-    ans = tokenizer.encode('!!!!')
-    eos = [tokenizer.eos_token_id]
-    if 'gsm8k' in args.task_name:
-        delim = ">> <<"
-    elif 'multiplication' in args.task_name:
-        delim = ' + '
+    if args.use_cot in (False, None):
+        inputs_key = 'examples_nocot'
+        labels_key = 'labels_nocot'
     else:
-        raise NotImplementedError(f"Unknown task name {args.task_name}")
-
+        inputs_key = 'examples_all'
+        labels_key = 'labels_all'
+        
     def collate_fn(batch):
-        # first, we segment each sample into task, cot steps and labels
-        segments_batch = []
-        for sample in batch:
-            task, lab, cot = sample['task'], sample['labels'], sample['cot']
-            task_tokens = tokenizer.encode(task, add_special_tokens=False)
-            labels_tokens = tokenizer.encode(lab, add_special_tokens=False)
-            cot_segments = split_cot(cot, by=delim)
-            cot_segment_tokens = tokenizer.batch_encode_plus(cot_segments, add_special_tokens=False)['input_ids']
+        input_ids = [torch.tensor(b[inputs_key]) for b in batch]
+        labels = [torch.tensor(b[labels_key]) for b in batch]
+        attention_mask = [torch.ones_like(b, dtype=int) for b in input_ids]
+        # labels_mask defines which input_ids participate in loss calculation
+        labels_mask = [torch.sign(torch.tensor(b[labels_key])) for b in batch]
 
-            segments = []
-            segments.append(make_segment(task_tokens + think, loss=False))
-            for segment in cot_segment_tokens[:-1]:
-                segments.append(make_segment(segment + think, loss=True))
-            segments.append(make_segment(cot_segment_tokens[-1] + ans, loss=True))
 
-            segments.append(make_segment(labels_tokens + eos, loss=True))
-            segments_batch.append(segments)
+        input_ids = pad_sequence(input_ids, padding_value=id_pad_value, batch_first=True)
+        labels = pad_sequence(labels, padding_value=id_pad_value, batch_first=True)
+        attention_mask = pad_sequence(attention_mask, padding_value=0, batch_first=True)
+        labels_mask = pad_sequence(labels_mask, padding_value=0, batch_first=True)
 
-        # if some samples have less segments than others, we pad them with empty segments
-        num_segments = max(len(segments) for segments in segments_batch)
-        for segments in segments_batch:
-            if len(segments) < num_segments:
-                segments.extend([make_segment(eos, loss=False)] * (num_segments - len(segments)))
-
-        # prepare segments for the whole batch
-        batch_segments = []
-        for i in range(num_segments):
-            input_ids = [s[i]['input_ids'] for s in segments_batch]
-            attention_mask = [s[i]['attention_mask'] for s in segments_batch]
-            labels = [s[i]['labels'] for s in segments_batch]
-            labels_mask = [s[i]['labels_mask'] for s in segments_batch]
-
-            input_ids = pad_sequence(input_ids, batch_first=True, padding_value=id_pad_value)
-            attention_mask = pad_sequence(attention_mask, batch_first=True, padding_value=0)
-            labels = pad_sequence(labels, batch_first=True, padding_value=-100)
-            labels_mask = pad_sequence(labels_mask, batch_first=True, padding_value=False)
-
-            batch_segment = {'input_ids': input_ids,
-                             'attention_mask': attention_mask,
-                             'labels_mask': labels_mask,
-                             'labels': labels
-                             }
-            batch_segments.append(batch_segment)
-        full_labels = torch.cat([s['labels'] for s in batch_segments], dim=1)
-        return {"segments": batch_segments, 'labels': full_labels}
+        collated = {'input_ids': input_ids,
+                    'labels': labels, 
+                    'attention_mask': attention_mask,
+                    }
+        if args.num_mem_tokens is not None:
+            # add labels mask only for RMT, ARMT
+            collated['labels_mask'] = labels_mask.bool()
+        return collated
 
     # define model
     # TODO: move model building to separate function
@@ -298,7 +256,7 @@ if __name__ == '__main__':
 
         model.load_state_dict(base_model.state_dict(), strict=False)
         del base_model
-        logger.info('Added adapters')
+        logger.info(f'Added adapters')
     else:
         # TODO: fix if for Qwen and Llama
         if not args.from_pretrained:
@@ -310,6 +268,7 @@ if __name__ == '__main__':
                 model = model_cls.from_pretrained(args.from_pretrained,
                                                   attn_implementation="flash_attention_2",
                                                   torch_dtype=torch.bfloat16,
+                                                  #device_map="cuda",
                                                   trust_remote_code=True)
             else:
                 model = model_cls.from_pretrained(args.from_pretrained, use_safetensors=False)
@@ -322,9 +281,9 @@ if __name__ == '__main__':
             lora_dropout=args.lora_dropout
             )
         model = get_peft_model(model, peft_config)
-        logger.info('Added LoRA, trainable parameters with LoRA only:')
+        logger.info(f'Added LoRA, trainable parameters with LoRA only:')
         model.print_trainable_parameters()
-    # load cpt of backbone model
+    ## load cpt of backbone model
     if args.backbone_cpt:
         backbone_cpt = os.path.join(args.backbone_cpt, "model_best.pth")
         cpt = torch.load(backbone_cpt, map_location='cpu')
@@ -343,7 +302,7 @@ if __name__ == '__main__':
         if args.d_mem is not None:
             mem_cell_args['d_mem'] = args.d_mem
             mem_cell_args['wrap_pos'] = args.wrap_pos
-            mem_cell_args['correction'] = not args.no_correction
+            mem_cell_args['correction'] = not(args.no_correction)
             # mem_cell_args['use_lora'] = args.use_lora
         if args.layers_attr is not None:
             mem_cell_args['layers_attr'] = args.layers_attr
@@ -357,8 +316,8 @@ if __name__ == '__main__':
                                       k2=args.k2,
                                       attend_to_previous_input=args.attend_to_previous_input,
                                       return_all_logits=False,
-                                      )
-        # load cpt of rmt
+        )
+        ## load cpt of rmt
         if args.model_cpt:
             if "safetensors" in args.model_cpt:
                 print(model)
@@ -376,8 +335,8 @@ if __name__ == '__main__':
                 cpt = torch.load(model_cpt, map_location='cpu')
                 model.load_state_dict(cpt, strict=False)
             logger.info(f'Loaded RMT state dict from: {args.model_cpt}')
-            logger.info('Trainable parameters after adding RMT/ARMT:')
-            logger.info(f'Remaining parameters: {[n for n, p in model.named_parameters() if p.requires_grad]}')
+        logger.info(f'Trainable parameters after adding RMT/ARMT:')
+        logger.info(f'Remaining parameters: {[n for n, p in model.named_parameters() if p.requires_grad]}')
     if args.add_lora_to_armt:
         peft_config = LoraConfig(
             task_type=TaskType.CAUSAL_LM,
@@ -388,7 +347,7 @@ if __name__ == '__main__':
             )
         # add LoRA only to the inner model
         model.memory_cell.model = get_peft_model(model.memory_cell.model, peft_config)
-        logger.info('Added LoRA, trainable parameters with LoRA only:')
+        logger.info(f'Added LoRA, trainable parameters with LoRA only:')
         model.memory_cell.model.print_trainable_parameters()
         # print(model)
     if args.freeze_model_weights:
@@ -397,7 +356,7 @@ if __name__ == '__main__':
                 p.requires_grad = False
             else:
                 p.requires_grad = True
-        logger.info('Frozen model weights')
+        logger.info(f'Frozen model weights')
         logger.info(f'Remaining parameters: {[n for n, p in model.named_parameters() if p.requires_grad]}')
     if args.tune_only_memory:
         for n, p in model.named_parameters():
@@ -405,18 +364,16 @@ if __name__ == '__main__':
                 p.requires_grad = False
             else:
                 p.requires_grad = True
-        logger.info('Frozen model weights')
+        logger.info(f'Frozen model weights')
         logger.info(f'Remaining parameters: {[n for n, p in model.named_parameters() if p.requires_grad]}')
     if args.tune_only_armt:
         for n, p in model.named_parameters():
-            if 'memory_cell.memory' not in n and 'W_mq' not in n \
-                    and 'W_mk' not in n and 'W_mv' not in n and 'W_mb' not in n:
+            if 'memory_cell.memory' not in n and 'W_mq' not in n and 'W_mk' not in n and 'W_mv' not in n and 'W_mb' not in n:
                 p.requires_grad = False
             else:
                 p.requires_grad = True
-        logger.info('Frozen model weights')
+        logger.info(f'Frozen model weights')
         logger.info(f'Remaining parameters: {[n for n, p in model.named_parameters() if p.requires_grad]}')
-
     # fix the not-contiguous error
     def make_contiguous(module):
         with torch.no_grad():
@@ -451,32 +408,34 @@ if __name__ == '__main__':
         model.to(torch.bfloat16)
     training_args = SFTConfig(**training_args_dict)
 
-    think_text = tokenizer.decode(think)
-    ans_text = tokenizer.decode(ans)
+    import torch.nn.functional as F
 
     def extract_cot(text):
-        try:
-            start_index = text.index(think_text)
-            end_index = text.index(ans_text, start_index + len(think_text))
-            return text[start_index + len(think_text):end_index]
-        except ValueError:
+        if '<|endoftext|>' not in text:
             return ''
+        else:
+            return text.split('<|endoftext|>')[0].strip()
 
     def extract_answer(text):
-        try:
-            return text.split(ans_text)[2]
-        except IndexError:
+        if '####' not in text:
             return ''
-
+        else:
+            ans = text.split('####')[-1]
+            ans = ans.split('<|endoftext|>')[0]
+            return ans.strip()
+            
     def compute_accuracy(eval_pred):
         preds = eval_pred.predictions.argmax(axis=-1)[:, :-1]
         labels = eval_pred.label_ids[:, 1:]
+        print("preds.shape, labels.shape")
+        print(preds.shape, labels.shape)
 
         labels_masks = labels > 0
         preds_full = [p[m] for p, m in zip(preds, labels_masks)]
-        labels_full = [lab[m] for lab, m in zip(labels, labels_masks)]
+        labels_full = [l[m] for l, m in zip(labels, labels_masks)]
 
         print(len(preds_full), len(labels_full))
+        # print(preds_full, labels_full)
 
         preds_full_text = tokenizer.batch_decode(preds_full, add_special_tokens=True)
         labels_full_text = tokenizer.batch_decode(labels_full, add_special_tokens=True)
@@ -484,20 +443,13 @@ if __name__ == '__main__':
         preds_cot = [extract_cot(p) for p in preds_full_text]
         preds_ans = [extract_answer(p) for p in preds_full_text]
 
-        labels_cot = [extract_cot(lab) for lab in labels_full_text]
-        labels_ans = [extract_answer(lab) for lab in labels_full_text]
-
-        acc_cot = np.mean([c == p for c, p in zip(preds_cot, labels_cot)])
-        acc_ans = np.mean([c == lab for c, lab in zip(preds_ans, labels_ans)])
+        labels_cot = [extract_cot(l) for l in labels_full_text]
+        labels_ans = [extract_answer(l) for l in labels_full_text]
+        
+        acc_cot = np.mean([c == l for c, l in zip(preds_cot, labels_cot)])
+        acc_ans = np.mean([c == l for c, l in zip(preds_ans, labels_ans)])
 
         return {'accuracy_cot': acc_cot, 'accuracy_ans': acc_ans}
-
-    # def compute_metrics(eval_pred):
-    #     logits, labels = eval_pred
-    #     loss_fct = torch.nn.CrossEntropyLoss()
-    #     loss = loss_fct(torch.tensor(logits), torch.tensor(labels)).item()
-    #     print('\n\n\n\n\nI FUCHING GIVE U EVAL LOSS')
-    #     return {"eval_loss": loss, 'loss': eval_loss}
 
     trainer = SFTTrainer(
         model=model,
@@ -506,7 +458,7 @@ if __name__ == '__main__':
         eval_dataset=valid_dataset,
         tokenizer=tokenizer,
         data_collator=collate_fn,
-        # compute_metrics=compute_metrics
+        compute_metrics=compute_accuracy
     )
     logger.info(f"Trainer Gradient Checkpointing Enabled: {trainer.args.gradient_checkpointing}")
     if args.early_stopping_patience != -1:

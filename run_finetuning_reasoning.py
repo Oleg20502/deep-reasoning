@@ -21,8 +21,6 @@ from transformers import AutoConfig, AutoTokenizer, HfArgumentParser  # noqa: E4
 # from lm_experiments_tools.utils import get_cls_by_name, get_optimizer, prepare_run  # noqa: E402
 from lm_experiments_tools.utils import get_cls_by_name
 
-from utils.reasoning import make_segment, split_cot
-
 logger_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 logging.basicConfig(format=logger_fmt, level=logging.INFO)
 logger = logging.getLogger('')
@@ -220,62 +218,46 @@ if __name__ == '__main__':
             test_dataset = datasets.load_from_disk(os.path.join(dataset_path, "valid"))
 
     id_pad_value = tokenizer.pad_token_id if tokenizer.pad_token_id is not None else tokenizer.eos_token_id
-    think = tokenizer.encode('????')
-    ans = tokenizer.encode('!!!!')
-    eos = [tokenizer.eos_token_id]
-    if 'gsm8k' in args.task_name:
-        delim = ">> <<"
-    elif 'multiplication' in args.task_name:
-        delim = ' + '
-    else:
-        raise NotImplementedError(f"Unknown task name {args.task_name}")
+    think = ans = tokenizer.bos_token_id
+    eos = tokenizer.eos_token_id
 
     def collate_fn(batch):
-        # first, we segment each sample into task, cot steps and labels
-        segments_batch = []
+        input_ids, labels, labels_mask, attention_mask = [], [], [], []
         for sample in batch:
             task, lab, cot = sample['task'], sample['labels'], sample['cot']
             task_tokens = tokenizer.encode(task, add_special_tokens=False)
             labels_tokens = tokenizer.encode(lab, add_special_tokens=False)
-            cot_segments = split_cot(cot, by=delim)
-            cot_segment_tokens = tokenizer.batch_encode_plus(cot_segments, add_special_tokens=False)['input_ids']
+            cot_tokens = tokenizer.encode(cot, add_special_tokens=False)
 
-            segments = []
-            segments.append(make_segment(task_tokens + think, loss=False))
-            for segment in cot_segment_tokens[:-1]:
-                segments.append(make_segment(segment + think, loss=True))
-            segments.append(make_segment(cot_segment_tokens[-1] + ans, loss=True))
+            if args.use_cot:
+                full_input = task_tokens + [think] + cot_tokens + [ans] + labels_tokens + [eos]
+            else:
+                full_input = task_tokens + [ans] + labels_tokens + [eos]
+            inp_ids = torch.tensor(full_input)
+            input_ids.append(inp_ids)
 
-            segments.append(make_segment(labels_tokens + eos, loss=True))
-            segments_batch.append(segments)
+            lab = torch.tensor(full_input)
+            lab[:len(task_tokens)] = -100
+            labels.append(lab)
 
-        # if some samples have less segments than others, we pad them with empty segments
-        num_segments = max(len(segments) for segments in segments_batch)
-        for segments in segments_batch:
-            if len(segments) < num_segments:
-                segments.extend([make_segment(eos, loss=False)] * (num_segments - len(segments)))
+            lab_mask = torch.ones_like(inp_ids)
+            lab_mask[:len(task_tokens)] = 0
+            labels_mask.append(lab_mask)
+            attention_mask.append(torch.ones_like(inp_ids))
 
-        # prepare segments for the whole batch
-        batch_segments = []
-        for i in range(num_segments):
-            input_ids = [s[i]['input_ids'] for s in segments_batch]
-            attention_mask = [s[i]['attention_mask'] for s in segments_batch]
-            labels = [s[i]['labels'] for s in segments_batch]
-            labels_mask = [s[i]['labels_mask'] for s in segments_batch]
+        input_ids = pad_sequence(input_ids, padding_value=id_pad_value, batch_first=True)
+        attention_mask = pad_sequence(attention_mask, padding_value=0, batch_first=True)
+        labels = pad_sequence(labels, padding_value=id_pad_value, batch_first=True)
+        labels_mask = pad_sequence(labels_mask, padding_value=0, batch_first=True)
 
-            input_ids = pad_sequence(input_ids, batch_first=True, padding_value=id_pad_value)
-            attention_mask = pad_sequence(attention_mask, batch_first=True, padding_value=0)
-            labels = pad_sequence(labels, batch_first=True, padding_value=-100)
-            labels_mask = pad_sequence(labels_mask, batch_first=True, padding_value=False)
-
-            batch_segment = {'input_ids': input_ids,
-                             'attention_mask': attention_mask,
-                             'labels_mask': labels_mask,
-                             'labels': labels
-                             }
-            batch_segments.append(batch_segment)
-        full_labels = torch.cat([s['labels'] for s in batch_segments], dim=1)
-        return {"segments": batch_segments, 'labels': full_labels}
+        collated = {'input_ids': input_ids,
+                    'labels': labels,
+                    'attention_mask': attention_mask,
+                    }
+        if args.num_mem_tokens is not None:
+            # add labels mask only for RMT, ARMT
+            collated['labels_mask'] = labels_mask.bool()
+        return collated
 
     # define model
     # TODO: move model building to separate function
@@ -376,8 +358,8 @@ if __name__ == '__main__':
                 cpt = torch.load(model_cpt, map_location='cpu')
                 model.load_state_dict(cpt, strict=False)
             logger.info(f'Loaded RMT state dict from: {args.model_cpt}')
-            logger.info('Trainable parameters after adding RMT/ARMT:')
-            logger.info(f'Remaining parameters: {[n for n, p in model.named_parameters() if p.requires_grad]}')
+        logger.info('Trainable parameters after adding RMT/ARMT:')
+        logger.info(f'Remaining parameters: {[n for n, p in model.named_parameters() if p.requires_grad]}')
     if args.add_lora_to_armt:
         peft_config = LoraConfig(
             task_type=TaskType.CAUSAL_LM,
@@ -492,13 +474,6 @@ if __name__ == '__main__':
 
         return {'accuracy_cot': acc_cot, 'accuracy_ans': acc_ans}
 
-    # def compute_metrics(eval_pred):
-    #     logits, labels = eval_pred
-    #     loss_fct = torch.nn.CrossEntropyLoss()
-    #     loss = loss_fct(torch.tensor(logits), torch.tensor(labels)).item()
-    #     print('\n\n\n\n\nI FUCHING GIVE U EVAL LOSS')
-    #     return {"eval_loss": loss, 'loss': eval_loss}
-
     trainer = SFTTrainer(
         model=model,
         args=training_args,
@@ -506,7 +481,7 @@ if __name__ == '__main__':
         eval_dataset=valid_dataset,
         tokenizer=tokenizer,
         data_collator=collate_fn,
-        # compute_metrics=compute_metrics
+        compute_metrics=compute_accuracy
     )
     logger.info(f"Trainer Gradient Checkpointing Enabled: {trainer.args.gradient_checkpointing}")
     if args.early_stopping_patience != -1:
