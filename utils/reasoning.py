@@ -2,6 +2,11 @@ import torch
 
 
 def split_cot(text, by=">> <<"):
+    if text.startswith('<<'):
+        text = text[2:]
+    if text.endswith('>>'):
+        text = text[:-2]
+
     return text.split(by)
 
 

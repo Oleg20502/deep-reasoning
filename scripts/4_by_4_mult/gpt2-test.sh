@@ -10,8 +10,8 @@ MODEL_TYPE=decoder
 MEMORY_CELL=modeling_amt.language_modeling:AssociativeMemoryCell
 RECURRENT_WRAPPER=modeling_amt.language_modeling:AssociativeRecurrentWrapper
 BACKBONE_CLS=transformers:AutoModelForCausalLM
-TASK_NAME=gsm8k
-ITERS=250000
+TASK_NAME=multiplication_4x4
+ITERS=50
 TBS=64
 INPUT_SIZE=1024
 
@@ -23,7 +23,7 @@ for N in 1; do
     SCHEDULER=linear
     INPUT_SEQ_LEN=$((INPUT_SIZE))
 
-    for LR in 1e-04; do
+    for LR in 3e-04; do
         GRADIENT_ACC_STEP=$((TBS/(BS*NP)))
         ACCEL_CONFIG="/workspace-SR006.nfs2/bulatov/rmt/reasoning/deep-reasoning/accel_configs/accelerate_bf16.yaml"
         MAIN_SCRIPT="/workspace-SR006.nfs2/bulatov/rmt/reasoning/deep-reasoning/run_finetuning_reasoning.py"
@@ -33,8 +33,8 @@ for N in 1; do
 
         accelerate launch --num_processes $NP --config_file $ACCEL_CONFIG $MAIN_SCRIPT \
         --task_name $TASK_NAME \
-        --dataset_name "booydar/gsm8k" \
-        --output_dir /workspace-SR006.nfs2/bulatov/rmt/runs/${TASK_NAME}/${MODEL_NAME}/SEGM_${MAX_N_SEGMENTS}x${INPUT_SIZE}_${INPUT_SEQ_LEN}_LR${LR} \
+        --dataset_name "booydar/multiplication_4x4" \
+        --output_dir /workspace-SR006.nfs2/bulatov/rmt/runs/test/${TASK_NAME}/${MODEL_NAME}/SEGM_${MAX_N_SEGMENTS}x${INPUT_SIZE}_${INPUT_SEQ_LEN}_LR${LR} \
         --from_pretrained $MODEL_NAME \
         --model_type $MODEL_TYPE \
         --memory_cell_cls $MEMORY_CELL \
@@ -51,9 +51,10 @@ for N in 1; do
         --save_total_limit 1 \
         --k1 -1 --k2 -1 \
         --optimizer AdamW --weight_decay 0.001 \
-        --learning_rate ${LR} --lr_scheduler_type $SCHEDULER --warmup_steps 3000 \
+        --learning_rate ${LR} --lr_scheduler_type $SCHEDULER --warmup_steps 10 \
+        --min_lr 3e-05 \
         --data_n_workers 2 \
-        --logging_steps 50 --eval_steps 250 --save_steps 500 \
+        --logging_steps 2 --eval_steps 10 --save_steps 500 \
         --show_valid_examples 0 \
         --early_stopping_patience 75 \
         --seed $((N+42)) \

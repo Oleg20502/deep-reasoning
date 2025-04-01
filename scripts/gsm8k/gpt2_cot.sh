@@ -10,7 +10,7 @@ MODEL_TYPE=decoder
 MEMORY_CELL=modeling_amt.language_modeling:AssociativeMemoryCell
 RECURRENT_WRAPPER=modeling_amt.language_modeling:AssociativeRecurrentWrapper
 BACKBONE_CLS=transformers:AutoModelForCausalLM
-TASK_NAME=4_by_4_mult
+TASK_NAME=gsm8k
 ITERS=250000
 TBS=64
 INPUT_SIZE=1024
@@ -33,7 +33,7 @@ for N in 1; do
 
         accelerate launch --num_processes $NP --config_file $ACCEL_CONFIG $MAIN_SCRIPT \
         --task_name $TASK_NAME \
-        --dataset_name "booydar/multiplication_4x4" \
+        --dataset_name "booydar/gsm8k" \
         --output_dir /workspace-SR006.nfs2/bulatov/rmt/runs/${TASK_NAME}/${MODEL_NAME}/SEGM_${MAX_N_SEGMENTS}x${INPUT_SIZE}_${INPUT_SEQ_LEN}_LR${LR}-cot \
         --from_pretrained $MODEL_NAME \
         --model_type $MODEL_TYPE \
