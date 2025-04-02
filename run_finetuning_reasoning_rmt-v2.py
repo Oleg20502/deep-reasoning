@@ -253,7 +253,10 @@ if __name__ == '__main__':
             task, lab, cot = sample['task'], sample['labels'], sample['cot']
             task_tokens = tokenizer.encode(task, add_special_tokens=False)
             labels_tokens = tokenizer.encode(lab, add_special_tokens=False)
-            cot_segments = split_cot(cot, by=delim)
+            if getattr(args, 'use_cot', False):
+                cot_segments = split_cot(cot, by=delim)
+            else:
+                cot_segments = [cot]
             cot_segment_tokens = tokenizer.batch_encode_plus(cot_segments, add_special_tokens=False)['input_ids']
 
             segments = []
