@@ -470,23 +470,6 @@ if __name__ == '__main__':
         model.to(torch.bfloat16)
     training_args = SFTConfig(**training_args_dict)
 
-    think_text = tokenizer.decode(think)
-    ans_text = tokenizer.decode(ans)
-
-    def extract_cot(text):
-        try:
-            start_index = text.index(think_text)
-            end_index = text.index(ans_text, start_index + len(think_text))
-            return text[start_index + len(think_text):end_index]
-        except ValueError:
-            return ''
-
-    def extract_answer(text):
-        try:
-            return text.split(ans_text)[2]
-        except IndexError:
-            return ''
-
     def compute_accuracy(eval_pred):
         preds = eval_pred.predictions.argmax(axis=-1)[:, :-1]
         labels = eval_pred.label_ids[:, 1:]
@@ -495,21 +478,24 @@ if __name__ == '__main__':
         preds_full = [p[m] for p, m in zip(preds, labels_masks)]
         labels_full = [lab[m] for lab, m in zip(labels, labels_masks)]
 
-        print(len(preds_full), len(labels_full))
+        special_tokens = {ans[0], bos[0]}
+        acc_cot, acc_ans = [], []
+        for lab_tokens, pred_tokens in zip(labels_full, preds_full):
+            ans_start_index = max(i for i, x in enumerate(lab_tokens) if x == ans[0])
 
-        preds_full_text = tokenizer.batch_decode(preds_full, add_special_tokens=True)
-        labels_full_text = tokenizer.batch_decode(labels_full, add_special_tokens=True)
+            pred_cot_tokens = pred_tokens[:ans_start_index].tolist()
+            lab_cot_tokens = lab_tokens[:ans_start_index].tolist()
 
-        preds_cot = [extract_cot(p) for p in preds_full_text]
-        preds_ans = [extract_answer(p) for p in preds_full_text]
+            cot_correct = [p == l for p, l in zip(pred_cot_tokens, lab_cot_tokens) if l not in special_tokens]
+            acc_cot.append(all(cot_correct))
 
-        labels_cot = [extract_cot(lab) for lab in labels_full_text]
-        labels_ans = [extract_answer(lab) for lab in labels_full_text]
+            pred_ans_tokens = pred_tokens[ans_start_index:].tolist()
+            lab_ans_tokens = lab_tokens[ans_start_index:].tolist()
 
-        acc_cot = np.mean([c == p for c, p in zip(preds_cot, labels_cot)])
-        acc_ans = np.mean([c == lab for c, lab in zip(preds_ans, labels_ans)])
+            ans_correct = [p == l for p, l in zip(pred_ans_tokens, lab_ans_tokens)]
+            acc_ans.append(all(ans_correct))
 
-        return {'accuracy_cot': acc_cot, 'accuracy_ans': acc_ans}
+        return {'accuracy_cot': np.mean(acc_cot), 'accuracy_ans': np.mean(acc_ans)}
 
     def lr_lambda(current_step):
         if current_step < training_args.warmup_steps:
