@@ -78,6 +78,7 @@ parser.add_argument('--truncate_only_train', action='store_true',
 
 # reasoning args
 parser.add_argument('--use_cot', action='store_true', help='use chain of thought examples')
+parser.add_argument('--answer_loss_weight', type=float, default=1, help='weight of answer in model loss')
 
 # model args
 parser.add_argument('--from_pretrained', type=str, help='model name in HF Model Hub (default: "")')
@@ -223,10 +224,6 @@ if __name__ == '__main__':
         else:
             test_dataset = datasets.load_from_disk(os.path.join(dataset_path, "valid"))
 
-    id_pad_value = tokenizer.pad_token_id if tokenizer.pad_token_id is not None else tokenizer.eos_token_id
-    think = tokenizer.encode('????')
-    ans = tokenizer.encode('!!!!')
-    eos = [tokenizer.eos_token_id]
     if 'gsm8k' in args.task_name:
         delim = ">> <<"
     elif 'multiplication' in args.task_name:
@@ -322,7 +319,7 @@ if __name__ == '__main__':
         # TODO: fix if for Qwen and Llama
         if not args.from_pretrained:
             model_cfg = AutoConfig.from_pretrained(args.model_cfg)
-            model = model_cls(config=model_cfg)
+            model = model_cls.from_config(model_cfg)
         else:
             logger.info(f'Loading pretrained model: {args.from_pretrained}')
             if "Qwen" in args.from_pretrained or "Llama" in args.from_pretrained:
@@ -376,6 +373,7 @@ if __name__ == '__main__':
                                       k2=args.k2,
                                       attend_to_previous_input=args.attend_to_previous_input,
                                       return_all_logits=False,
+                                      answer_loss_weight=args.answer_loss_weight
                                       )
         # load cpt of rmt
         if args.model_cpt:
@@ -492,7 +490,7 @@ if __name__ == '__main__':
             pred_ans_tokens = pred_tokens[ans_start_index:].tolist()
             lab_ans_tokens = lab_tokens[ans_start_index:].tolist()
 
-            ans_correct = [p == l for p, l in zip(pred_ans_tokens, lab_ans_tokens)]
+            ans_correct = [p == l for p, l in zip(pred_ans_tokens, lab_ans_tokens) if l not in special_tokens]
             acc_ans.append(all(ans_correct))
 
         return {'accuracy_cot': np.mean(acc_cot), 'accuracy_ans': np.mean(acc_ans)}
