@@ -3,16 +3,11 @@ from torch.nn import CrossEntropyLoss
 from transformers.modeling_outputs import CausalLMOutputWithCrossAttentions
 from modeling_rmt.language_modeling import RecurrentWrapper
 
-
-# from transformers import AutoTokenizer
-# tokenizer = AutoTokenizer.from_pretrained('gpt2')
+from transformers import StoppingCriteria
 
 
 class RecurrentWrapperNoSegmentation(RecurrentWrapper):
     def forward(self, segments, labels, output_attentions=None, output_hidden_states=None):
-        # segments = segments['segments']
-        # for seg in segments:
-        #     print(tokenizer.batch_decode(seg['input_ids'], skip_special_tokens=True))
         memory_state = None
 
         cell_outputs = []
@@ -21,7 +16,7 @@ class RecurrentWrapperNoSegmentation(RecurrentWrapper):
                                                       attention_mask=segment['attention_mask'],
                                                       memory_state=memory_state, output_hidden_states=True)
             cell_outputs.append(cell_out)
-            self.manage_gradients(memory_state, seg_num)
+            memory_state = self.manage_gradients(memory_state, seg_num)
 
         out = self.process_outputs(cell_outputs, segments,
                                    output_attentions=output_attentions,
@@ -150,3 +145,79 @@ class RecurrentWrapperNoSegmentationWeighLoss(RecurrentWrapperNoSegmentation):
     def gradient_checkpointing_enable(self, *args, **kwargs):
         if hasattr(self.memory_cell.model, "gradient_checkpointing_enable"):
             return self.memory_cell.model.gradient_checkpointing_enable(*args, **kwargs)
+class StopOnSpecialTokenCriteria(StoppingCriteria):
+    def __init__(self, special_token_ids):
+        self.special_token_ids = set(special_token_ids)
+
+    def __call__(self, input_ids, scores, **kwargs):
+        last_token = input_ids[0, -1].item()
+        return last_token in self.special_token_ids
+
+
+class RecurrentWrapperNoSegmentationGenerate(RecurrentWrapperNoSegmentation):
+    def forward(self, segments, labels, output_attentions=None, output_hidden_states=None):
+        memory_state = None
+
+        cell_outputs = []
+        for seg_num, segment in enumerate(segments):
+            cell_out, memory_state = self.memory_cell(input_ids=segment['input_ids'],
+                                                      attention_mask=segment['attention_mask'],
+                                                      memory_state=memory_state, output_hidden_states=True)
+            cell_outputs.append(cell_out)
+            self.manage_gradients(memory_state, seg_num)
+
+        out = self.process_outputs(cell_outputs, segments,
+                                   output_attentions=output_attentions,
+                                   output_hidden_states=output_hidden_states)
+        return out
+
+    def generate(self, segments, **kwargs):
+        memory_state = None
+
+        for seg_num, segment in enumerate(segments):
+            cell_out, memory_state = self.memory_cell(input_ids=segment['input_ids'],
+                                                      attention_mask=segment['attention_mask'],
+                                                      memory_state=memory_state, output_hidden_states=True)
+
+        generated_segments = []
+        for seg_num in range(len(segments), self.rmt_config.get("max_n_segments", 32)):
+            output_ids, memory_state = self.generate_segment(memory_state=memory_state, **kwargs)
+            generated_segments.append(output_ids)
+
+            if self.all_done(generated_segments):
+                break
+
+        return generated_segments
+
+    def generate_segment(self, memory_state, **kwargs):
+        input_ids = self.get_bos_tensor(memory_state)
+        attention_mask = torch.ones_like(input_ids).bool()
+
+        generated = self.memory_cell.generate(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            memory_state=memory_state,
+            stopping_criteria=self.make_custom_stopping_criteria(),
+            **kwargs
+        )
+
+        # Update memory state from generation
+        fwd_inputs = torch.cat((input_ids, generated), dim=1)[:, :-1]
+        _, memory_state = self.memory_cell(input_ids=fwd_inputs, memory_state=memory_state)
+
+        return generated, memory_state
+
+    def get_bos_tensor(self, memory_state):
+        bos = self.rmt_config["bos_token_id"]
+        bos_tensor = torch.tensor([bos] * memory_state.shape[0]).reshape(-1, 1)
+        return bos_tensor.to(memory_state.device)
+
+    def all_done(self, generated_segments):
+        eos = self.rmt_config['eos_token_id']
+        bs = generated_segments[0].shape[0]
+        have_eos = [any([eos in seg[i] for seg in generated_segments]) for i in range(bs)]
+        all_done = all(have_eos)
+        return all_done
+
+    def make_custom_stopping_criteria(self):
+        return [StopOnSpecialTokenCriteria([self.rmt_config['think_token_id'], self.rmt_config['answer_token_id']])]
