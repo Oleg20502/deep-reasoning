@@ -79,6 +79,7 @@ parser.add_argument('--truncate_only_train', action='store_true',
 # reasoning args
 parser.add_argument('--use_cot', action='store_true', help='use chain of thought examples')
 parser.add_argument('--answer_loss_weight', type=float, default=1, help='weight of answer in model loss')
+parser.add_argument('--max_cot_steps', type=int, default=None, help='maximum number of cot steps')
 
 # model args
 parser.add_argument('--from_pretrained', type=str, help='model name in HF Model Hub (default: "")')
@@ -224,6 +225,11 @@ if __name__ == '__main__':
         else:
             test_dataset = datasets.load_from_disk(os.path.join(dataset_path, "valid"))
 
+    if args.max_cot_steps is not None:
+        train_dataset = train_dataset.filter(lambda x: x['cot_len'] <= args.max_cot_steps)
+        valid_dataset = valid_dataset.filter(lambda x: x['cot_len'] <= args.max_cot_steps)
+        test_dataset = test_dataset.filter(lambda x: x['cot_len'] <= args.max_cot_steps)
+        logger.info(f"Filtered ds sizes: {len(train_dataset), len(valid_dataset), len(test_dataset)}")
     if 'gsm8k' in args.task_name:
         delim = ">> <<"
     elif 'multiplication' in args.task_name:
@@ -498,8 +504,13 @@ if __name__ == '__main__':
     def lr_lambda(current_step):
         if current_step < training_args.warmup_steps:
             return current_step / training_args.warmup_steps
-        decay_factor = (training_args.max_steps - current_step) / (training_args.max_steps - training_args.warmup_steps)
-        return max(args.min_lr / training_args.learning_rate, decay_factor)
+        if args.lr_scheduler_type == "linear":
+            decay_factor = (training_args.max_steps - current_step) / (training_args.max_steps - training_args.warmup_steps)
+            return max(args.min_lr / training_args.learning_rate, decay_factor)
+        elif args.lr_scheduler_type == "constant":
+            return 1.0
+        else:
+            raise ValueError("Unsupported lr_scheduler_type")
 
     optimizer = AdamW(model.parameters(), lr=training_args.learning_rate)
     scheduler = LambdaLR(optimizer, lr_lambda)
