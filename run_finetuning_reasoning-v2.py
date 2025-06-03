@@ -76,6 +76,8 @@ parser.add_argument('--truncate_only_train', action='store_true',
 
 # reasoning args
 parser.add_argument('--use_cot', action='store_true', help='use chain of thought examples')
+parser.add_argument('--answer_loss_weight', type=float, default=1, help='weight of answer in model loss')
+parser.add_argument('--max_cot_steps', type=int, default=None, help='maximum number of cot steps')
 
 # model args
 parser.add_argument('--from_pretrained', type=str, help='model name in HF Model Hub (default: "")')
@@ -254,9 +256,9 @@ if __name__ == '__main__':
             cot_tokens = tokenizer.encode(cot, add_special_tokens=False)
 
             if args.use_cot:
-                full_input = task_tokens + [think] + cot_tokens + [ans] + labels_tokens + [eos]
+                full_input = task_tokens + think + cot_tokens + ans + labels_tokens + eos
             else:
-                full_input = task_tokens + [ans] + labels_tokens + [eos]
+                full_input = task_tokens + ans + labels_tokens + eos
             inp_ids = torch.tensor(full_input)
             input_ids.append(inp_ids)
 

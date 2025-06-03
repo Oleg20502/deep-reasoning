@@ -46,6 +46,12 @@ class RMCrossAttention(torch.nn.Module):
         if output_attentions:
             outputs += (cross_attn_outputs[1:],)
 
+        # self.debug_state = dict(encoder_hidden_states=encoder_hidden_states,
+        #                         inp_hidden_states=residual,
+        #                         output=outputs,
+        #                         attn_output=attn_output,
+        #                         cross_attn_outputs=cross_attn_outputs,
+        #                         )
         return outputs  # hidden_states, attention_weights
 
 
@@ -60,10 +66,6 @@ class RMCALayerWrapper(torch.nn.Module):
         self.generate_mode = False
 
     def forward(self, hidden_states, output_attentions=False, *args, **kwargs):
-        # if args:
-        #     print('wrapper args', args)
-        # if kwargs:
-        #     print('wrapper kwargs', kwargs)
         if self.memory_state is None:
             self.memory_state = self.set_memory(hidden_states)
 
@@ -77,20 +79,23 @@ class RMCALayerWrapper(torch.nn.Module):
 
         out = self.layer(hidden_states, **kwargs, output_attentions=output_attentions)
 
-        self.debug_state = dict(hidden_states=hidden_states, memory_state=self.memory_state, output=out,
-                                cross_attentions_read=cross_attentions_read,
-                                cross_attentions_write=cross_attentions_write)
+        # self.debug_state = dict(inp_hidden_states=hidden_states, 
+        #                         mem_read_out=mem_read_out,
+        #                         mem_write_out=mem_write_out,
+        #                         memory_state=self.memory_state, output=out,
+        #                         cross_attentions_read=cross_attentions_read,
+        #                         cross_attentions_write=cross_attentions_write)
 
         return out
 
     def create_mem_read_layer(self, config):
         mem_read_layer = RMCrossAttention(config, dropout=getattr(self, 'use_dropout', False))
-        self.register_module("mem_read_layer", mem_read_layer)
+        mem_read_layer.cross_attn.c_proj.weight.data.zero_()
         return mem_read_layer
 
     def create_mem_write_layer(self, config):
         mem_write_layer = RMCrossAttention(config, dropout=getattr(self, 'use_dropout', False))
-        self.register_module("mem_write_layer", mem_write_layer)
+        mem_write_layer.cross_attn.c_proj.weight.data.zero_()
         return mem_write_layer
 
     def create_memory(self, num_mem_tokens, memory_dim):
@@ -145,10 +150,6 @@ class RMCAMemoryCell(torch.nn.Module):
 
 class RMCAWrapperNoSegmentationGenerate(RecurrentWrapperNoSegmentationGenerate):
     def forward(self, segments, labels, output_attentions=None, output_hidden_states=None, *args, **kwargs):
-        # if args:
-        #     print('wrapper args', args)
-        # if kwargs:
-        #     print('wrapper kwargs', kwargs)
         self.memory_cell.reset_memory()
 
         cell_outputs = []
