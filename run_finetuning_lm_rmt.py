@@ -128,18 +128,6 @@ if __name__ == '__main__':
     # Prepare datasets
     logger.info(f'preparing dataset for {args.task_name}')
 
-    with accelerator.main_process_first():
-        if args.tokenized_dataset is not None:
-            dataset = datasets.load_from_disk(args.tokenized_dataset)
-        elif args.task_name is not None:
-            if 'wikitext' in args.task_name:
-                dataset = datasets.load_dataset('Salesforce/wikitext', 'wikitext-103-raw-v1')
-            else:
-                dataset = datasets.load_dataset(args.task_name)
-            dataset = dataset.map(lambda x: tokenizer(x['text'], add_special_tokens=False))
-        else:
-            raise NotImplementedError("")
-
     segment_size = args.segment_size
     history_size = args.sample_size - segment_size
 
@@ -204,15 +192,44 @@ if __name__ == '__main__':
     #     train_dataset = dataset['train'].filter(lambda sample: filter_by_len(sample, args.min_sample_len))
     # else:
     #     train_dataset = dataset['train'].filter(filter_by_16k)
-    train_dataset = dataset['train']
+    with accelerator.main_process_first():
+        if args.tokenized_dataset is not None:
+            dataset = datasets.load_from_disk(args.tokenized_dataset)
+        elif args.task_name is not None:
+            if 'fineweb' in args.task_name:
+                train_dataset = datasets.load_dataset("HuggingFaceFW/fineweb-edu", name="CC-MAIN-2024-10",
+                                                      split="train", streaming=True)
+                other_dataset = datasets.load_dataset('Salesforce/wikitext', 'wikitext-103-raw-v1')
+                valid_dataset = other_dataset["validation"]
+                test_dataset = other_dataset["test"]
+            else:
+                if 'wikitext' in args.task_name:
+                    dataset = datasets.load_dataset('Salesforce/wikitext', 'wikitext-103-raw-v1')
+                else:
+                    dataset = datasets.load_dataset(args.task_name)
+
+                train_dataset = dataset['train']
+                valid_dataset = dataset["validation"]
+                test_dataset = dataset["test"]
+            train_dataset = train_dataset.map(lambda x: tokenizer(x['text'], add_special_tokens=False))
+            valid_dataset = valid_dataset.map(lambda x: tokenizer(x['text'], add_special_tokens=False))
+            test_dataset = test_dataset.map(lambda x: tokenizer(x['text'], add_special_tokens=False))
+        else:
+            raise NotImplementedError("")
 
     with accelerator.main_process_first():
         train_dataset = train_dataset.select_columns(['input_ids']).map(lambda x: group_texts(x, segment_size, history_size),
-                                                                        batched=True, desc=f"Grouping train in chunks of {segment_size} and history {history_size}")
-        valid_dataset = dataset["validation"].select_columns(['input_ids']).map(lambda x: group_texts(x, segment_size, val_history_size),
-                                                                                batched=True, desc=f"Grouping valid in chunks of {segment_size} and history {val_history_size}")
-        test_dataset = dataset["test"].select_columns(['input_ids']).map(lambda x: group_texts(x, segment_size, val_history_size),
-                                                                         batched=True, desc=f"Grouping test in chunks of {segment_size} and history {val_history_size}")
+                                                                        batched=True,
+                                                                        # desc=f"Grouping train in chunks of {segment_size} and history {history_size}"
+                                                                        )
+        valid_dataset = valid_dataset.select_columns(['input_ids']).map(lambda x: group_texts(x, segment_size, val_history_size),
+                                                                        batched=True,
+                                                                        # desc=f"Grouping valid in chunks of {segment_size} and history {val_history_size}"
+                                                                        )
+        test_dataset = test_dataset.select_columns(['input_ids']).map(lambda x: group_texts(x, segment_size, val_history_size),
+                                                                      batched=True,
+                                                                      #  desc=f"Grouping test in chunks of {segment_size} and history {val_history_size}"
+                                                                      )
 
     num_valid_examples = 100
     valid_inds = np.linspace(1, len(valid_dataset)-1, num_valid_examples).astype(int).tolist()
@@ -227,7 +244,7 @@ if __name__ == '__main__':
 
     if not args.from_pretrained:
         model_cfg = AutoConfig.from_pretrained(args.model_cfg)
-        model = model_cls(config=model_cfg)
+        model = model_cls.from_config(config=model_cfg)
     else:
         logger.info(f'Loading pretrained model: {args.from_pretrained}')
         model = model_cls.from_pretrained(args.from_pretrained)
@@ -277,7 +294,7 @@ if __name__ == '__main__':
     training_args_dict['label_names'] = ['labels']
 
     training_args_dict['evaluation_strategy'] = 'steps'
-    training_args_dict['per_device_eval_batch_size'] = training_args_dict.get('per_device_train_batch_size') // 2
+    training_args_dict['per_device_eval_batch_size'] = training_args_dict.get('per_device_train_batch_size') // 4
     training_args_dict['eval_accumulation_steps'] = 32
     training_args_dict['gradient_checkpointing'] = True
     training_args_dict['gradient_checkpointing_kwargs'] = {'use_reentrant': False}
@@ -296,7 +313,7 @@ if __name__ == '__main__':
         data_collator=collate_fn,
     )
     print("Trainer Gradient Checkpointing Enabled:", trainer.args.gradient_checkpointing)
-    
+
     trainer.evaluate()
     if not args.validate_only:
         trainer.train(resume_from_checkpoint=args.checkpoint)
