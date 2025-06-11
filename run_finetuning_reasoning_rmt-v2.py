@@ -334,7 +334,8 @@ if __name__ == '__main__':
                                                   torch_dtype=torch.bfloat16,
                                                   trust_remote_code=True)
             else:
-                model = model_cls.from_pretrained(args.from_pretrained, use_safetensors=False)
+                # model = model_cls.from_pretrained(args.from_pretrained, use_safetensors=False)
+                model = model_cls.from_pretrained(args.from_pretrained)
     if args.use_lora:
         peft_config = LoraConfig(
             task_type=TaskType.CAUSAL_LM,
@@ -348,7 +349,10 @@ if __name__ == '__main__':
         model.print_trainable_parameters()
     # load cpt of backbone model
     if args.backbone_cpt:
-        backbone_cpt = os.path.join(args.backbone_cpt, "model_best.pth")
+        if 'bin' in args.backbone_cpt:
+            backbone_cpt = args.backbone_cpt
+        else:
+            backbone_cpt = os.path.join(args.backbone_cpt, "model_best.pth")
         cpt = torch.load(backbone_cpt, map_location='cpu')
         model.load_state_dict(cpt['model_state_dict'], strict=False)
         logger.info(f'Loaded baseline state dict from: {args.backbone_cpt}')
@@ -399,8 +403,7 @@ if __name__ == '__main__':
                 cpt = torch.load(model_cpt, map_location='cpu')
                 model.load_state_dict(cpt, strict=False)
             logger.info(f'Loaded RMT state dict from: {args.model_cpt}')
-            logger.info('Trainable parameters after adding RMT/ARMT:')
-            logger.info(f'Remaining parameters: {[n for n, p in model.named_parameters() if p.requires_grad]}')
+            logger.info(f'Trainable parameters: {[n for n, p in model.named_parameters() if p.requires_grad]}')
     if args.add_lora_to_armt:
         peft_config = LoraConfig(
             task_type=TaskType.CAUSAL_LM,
@@ -454,11 +457,9 @@ if __name__ == '__main__':
     training_args_dict['bf16'] = True
     training_args_dict['label_names'] = ['labels']
     training_args_dict['evaluation_strategy'] = 'steps'
-    if training_args_dict.get('per_device_train_batch_size') == 1:
-        training_args_dict['per_device_eval_batch_size'] = training_args_dict.get('per_device_train_batch_size')
-    else:
-        training_args_dict['per_device_eval_batch_size'] = training_args_dict.get('per_device_train_batch_size') // 2
-    training_args_dict['eval_accumulation_steps'] = 32
+    per_device_eval_batch_size = training_args_dict.get('per_device_train_batch_size') // 8
+    training_args_dict['per_device_eval_batch_size'] = max(per_device_eval_batch_size, 1)
+    training_args_dict['eval_accumulation_steps'] = 16
     if args.d_mem is None:
         # for now, gradient checkpointing doesn't supported for ARMT
         training_args_dict['gradient_checkpointing'] = True
