@@ -1,7 +1,4 @@
-accelerate
-datasets
 peft
 tensorboard
-torch
-transformers
-trl
+wandb
+trl==0.14.0

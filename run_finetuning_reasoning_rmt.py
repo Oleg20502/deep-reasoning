@@ -434,7 +434,7 @@ if __name__ == '__main__':
     training_args_dict['save_safetensors'] = False
     training_args_dict['bf16'] = True
     training_args_dict['label_names'] = ['labels']
-    training_args_dict['evaluation_strategy'] = 'steps'
+    training_args_dict['eval_strategy'] = 'steps'
     if training_args_dict.get('per_device_train_batch_size') == 1:
         training_args_dict['per_device_eval_batch_size'] = training_args_dict.get('per_device_train_batch_size')
     else:
@@ -510,7 +510,7 @@ if __name__ == '__main__':
         args=training_args,
         train_dataset=train_dataset,
         eval_dataset=valid_dataset,
-        tokenizer=tokenizer,
+        processing_class=tokenizer,
         data_collator=collate_fn,
         compute_metrics=compute_accuracy,
         optimizers=(optimizer, scheduler)
