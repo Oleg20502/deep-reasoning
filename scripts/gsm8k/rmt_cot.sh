@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-SCRIPT_DIR=/workspace-SR006.nfs2/bulatov/rmt/reasoning/deep-reasoning
-RUNS_DIR=/workspace-SR006.nfs2/bulatov/rmt/runs
+SCRIPT_DIR=/home/user33/kashurin/deep-reasoning
+RUNS_DIR=/home/user33/kashurin/runs
 
 cd $SCRIPT_DIR
 
@@ -24,7 +24,7 @@ for N in 1; do
     SEGMENT_ORDERING=regular
     MAX_N_SEGMENTS=1
     MEMORY_SIZE=4
-    BS=128
+    BS=32
     SCHEDULER=linear
     INPUT_SEQ_LEN=$((INPUT_SIZE))
 
