@@ -19,7 +19,7 @@ for N in 1; do
     MODEL_NAME=gpt2
     SEGMENT_ORDERING=regular
     MAX_N_SEGMENTS=1
-    BS=32
+    BS=16
     SCHEDULER=linear
     INPUT_SEQ_LEN=$((INPUT_SIZE))
 

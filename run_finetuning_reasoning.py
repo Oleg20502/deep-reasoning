@@ -280,7 +280,7 @@ if __name__ == '__main__':
         model = model_cls(config=model_cfg)
 
         logger.info(f'Loading pretrained model: {args.from_pretrained}')
-        base_model = model_cls.from_pretrained(args.from_pretrained, use_safetensors=False)
+        base_model = model_cls.from_pretrained(args.from_pretrained)
 
         model.load_state_dict(base_model.state_dict(), strict=False)
         del base_model
@@ -298,7 +298,7 @@ if __name__ == '__main__':
                                                   torch_dtype=torch.bfloat16,
                                                   trust_remote_code=True)
             else:
-                model = model_cls.from_pretrained(args.from_pretrained, use_safetensors=False)
+                model = model_cls.from_pretrained(args.from_pretrained)
     if args.use_lora:
         peft_config = LoraConfig(
             task_type=TaskType.CAUSAL_LM,
@@ -416,7 +416,7 @@ if __name__ == '__main__':
     training_args_dict['save_safetensors'] = False
     training_args_dict['bf16'] = True
     training_args_dict['label_names'] = ['labels']
-    training_args_dict['evaluation_strategy'] = 'steps'
+    training_args_dict['eval_strategy'] = 'steps'
     if training_args_dict.get('per_device_train_batch_size') == 1:
         training_args_dict['per_device_eval_batch_size'] = training_args_dict.get('per_device_train_batch_size')
     else:
@@ -492,7 +492,7 @@ if __name__ == '__main__':
         args=training_args,
         train_dataset=train_dataset,
         eval_dataset=valid_dataset,
-        tokenizer=tokenizer,
+        processing_class=tokenizer,
         data_collator=collate_fn,
         compute_metrics=compute_accuracy,
         optimizers=(optimizer, scheduler)

@@ -2,3 +2,4 @@ peft
 tensorboard
 wandb
 trl==0.14.0
+jupyterlab

@@ -195,6 +195,9 @@ if __name__ == '__main__':
     if args.output_dir is None:
         logger.warning('output_dir is not set: config, logs and checkpoints will not be saved.')
 
+    # ============================
+    # === Prepare tokenizer and datasets
+    # ============================
     if not args.from_pretrained:
         tokenizer = AutoTokenizer.from_pretrained(args.tokenizer)
     else:
@@ -249,6 +252,11 @@ if __name__ == '__main__':
     else:
         raise NotImplementedError(f"Unknown task name {args.task_name}")
 
+
+    # ============================
+    # === Prepare data collator ===
+    # ============================
+
     def collate_fn(batch):
         # first, we segment each sample into task, cot steps and labels
         segments_batch = []
@@ -299,7 +307,10 @@ if __name__ == '__main__':
         full_labels = torch.cat([s['labels'] for s in batch_segments], dim=1)
         return {"segments": batch_segments, 'labels': full_labels}
 
-    # define model
+
+    # ============================
+    # === Define model ==========
+    # ============================
     # TODO: move model building to separate function
     model_cls = get_cls_by_name(args.model_cls)
     logger.info(f'Using model class: {model_cls}')
@@ -334,8 +345,9 @@ if __name__ == '__main__':
                                                   torch_dtype=torch.bfloat16,
                                                   trust_remote_code=True)
             else:
-                # model = model_cls.from_pretrained(args.from_pretrained, use_safetensors=False)
                 model = model_cls.from_pretrained(args.from_pretrained)
+
+    # add LoRA adapters
     if args.use_lora:
         peft_config = LoraConfig(
             task_type=TaskType.CAUSAL_LM,
@@ -347,6 +359,7 @@ if __name__ == '__main__':
         model = get_peft_model(model, peft_config)
         logger.info('Added LoRA, trainable parameters with LoRA only:')
         model.print_trainable_parameters()
+    
     # load cpt of backbone model
     if args.backbone_cpt:
         if 'bin' in args.backbone_cpt:
@@ -354,8 +367,9 @@ if __name__ == '__main__':
         else:
             backbone_cpt = os.path.join(args.backbone_cpt, "model_best.pth")
         cpt = torch.load(backbone_cpt, map_location='cpu')
-        model.load_state_dict(cpt['model_state_dict'], strict=False)
+        model.load_state_dict(cpt['model_state_dict'], strict=True)
         logger.info(f'Loaded baseline state dict from: {args.backbone_cpt}')
+    
     # Pass memory settings to pretrained model
     if args.num_mem_tokens is not None:
         memory_cell_cls = get_cls_by_name(args.memory_cell_cls)
@@ -375,16 +389,19 @@ if __name__ == '__main__':
             mem_cell_args['layers_attr'] = args.layers_attr
         if args.attend_to_previous_input:
             mem_cell_args['attend_to_previous_input'] = args.attend_to_previous_input
+        
         cell = memory_cell_cls(**mem_cell_args)
-        model = recurrent_wrapper_cls(cell,
-                                      segment_size=args.segment_size,
-                                      max_n_segments=args.max_n_segments,
-                                      vary_n_segments=args.vary_n_segments,
-                                      k2=args.k2,
-                                      attend_to_previous_input=args.attend_to_previous_input,
-                                      return_all_logits=False,
-                                      answer_loss_weight=args.answer_loss_weight
-                                      )
+        model = recurrent_wrapper_cls(
+            cell,
+            segment_size=args.segment_size,
+            max_n_segments=args.max_n_segments,
+            vary_n_segments=args.vary_n_segments,
+            k2=args.k2,
+            attend_to_previous_input=args.attend_to_previous_input,
+            return_all_logits=False,
+            answer_loss_weight=args.answer_loss_weight
+        )
+        
         # load cpt of rmt
         if args.model_cpt:
             if "safetensors" in args.model_cpt:
@@ -404,6 +421,7 @@ if __name__ == '__main__':
                 model.load_state_dict(cpt, strict=False)
             logger.info(f'Loaded RMT state dict from: {args.model_cpt}')
             logger.info(f'Trainable parameters: {[n for n, p in model.named_parameters() if p.requires_grad]}')
+    
     if args.add_lora_to_armt:
         peft_config = LoraConfig(
             task_type=TaskType.CAUSAL_LM,
@@ -417,6 +435,7 @@ if __name__ == '__main__':
         logger.info('Added LoRA, trainable parameters with LoRA only:')
         model.memory_cell.model.print_trainable_parameters()
         # print(model)
+    
     if args.freeze_model_weights:
         for n, p in model.named_parameters():
             if 'memory' not in n and 'lora' not in n and 'adapter' not in n:
@@ -425,6 +444,7 @@ if __name__ == '__main__':
                 p.requires_grad = True
         logger.info('Frozen model weights')
         logger.info(f'Remaining parameters: {[n for n, p in model.named_parameters() if p.requires_grad]}')
+    
     if args.tune_only_memory:
         for n, p in model.named_parameters():
             if 'memory_cell.memory' not in n:
@@ -433,6 +453,7 @@ if __name__ == '__main__':
                 p.requires_grad = True
         logger.info('Frozen model weights')
         logger.info(f'Remaining parameters: {[n for n, p in model.named_parameters() if p.requires_grad]}')
+    
     if args.tune_only_armt:
         for n, p in model.named_parameters():
             if 'memory_cell.memory' not in n and 'W_mq' not in n \
@@ -449,14 +470,16 @@ if __name__ == '__main__':
             for param in module.parameters():
                 param.set_(param.contiguous())
     make_contiguous(model)
-    # now switch to HF trainer
+    
+    # ============================
+    # === Preparing HF trainer ===
+    # ============================
     training_args_dict = {key: value for key, value in vars(args).items() if hasattr(SFTConfig('.'), key)}
 
     training_args_dict['remove_unused_columns'] = False
     training_args_dict['save_safetensors'] = False
-    training_args_dict['bf16'] = True
     training_args_dict['label_names'] = ['labels']
-    training_args_dict['evaluation_strategy'] = 'steps'
+    training_args_dict['eval_strategy'] = 'steps'
     per_device_eval_batch_size = training_args_dict.get('per_device_train_batch_size') // 8
     training_args_dict['per_device_eval_batch_size'] = max(per_device_eval_batch_size, 1)
     training_args_dict['eval_accumulation_steps'] = 16
@@ -471,8 +494,7 @@ if __name__ == '__main__':
 
     if args.num_mem_tokens is not None:
         # fix max_seq_length warning
-        training_args_dict["max_seq_length"] = args.sample_size
-        model.to(torch.bfloat16)
+        training_args_dict["max_seq_length"] = args.segment_size
     training_args = SFTConfig(**training_args_dict)
 
     def compute_accuracy(eval_pred):
@@ -521,7 +543,7 @@ if __name__ == '__main__':
         args=training_args,
         train_dataset=train_dataset,
         eval_dataset=valid_dataset,
-        tokenizer=tokenizer,
+        processing_class=tokenizer,
         data_collator=collate_fn,
         compute_metrics=compute_accuracy,
         optimizers=(optimizer, scheduler)

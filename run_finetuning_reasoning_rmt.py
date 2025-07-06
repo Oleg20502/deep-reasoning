@@ -244,6 +244,10 @@ if __name__ == '__main__':
             cot_segments = split_cot(cot, by=delim)
             cot_segment_tokens = tokenizer.batch_encode_plus(cot_segments, add_special_tokens=False)['input_ids']
 
+            # latent_reasoning_segment = tokenizer.batch_encode_plus(
+            #     [reasoning_token]*text_seq_len, add_special_tokens=False
+            # )['input_ids']
+
             segments = []
             segments.append(make_segment(task_tokens + think, loss=False))
             for segment in cot_segment_tokens[:-1]:
@@ -298,7 +302,7 @@ if __name__ == '__main__':
         model = model_cls(config=model_cfg)
 
         logger.info(f'Loading pretrained model: {args.from_pretrained}')
-        base_model = model_cls.from_pretrained(args.from_pretrained, use_safetensors=False)
+        base_model = model_cls.from_pretrained(args.from_pretrained)
 
         model.load_state_dict(base_model.state_dict(), strict=False)
         del base_model
@@ -316,7 +320,7 @@ if __name__ == '__main__':
                                                   torch_dtype=torch.bfloat16,
                                                   trust_remote_code=True)
             else:
-                model = model_cls.from_pretrained(args.from_pretrained, use_safetensors=False)
+                model = model_cls.from_pretrained(args.from_pretrained)
     if args.use_lora:
         peft_config = LoraConfig(
             task_type=TaskType.CAUSAL_LM,

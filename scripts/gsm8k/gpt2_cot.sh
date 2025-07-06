@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -e
-cd ../../
+
+export CUDA_VISIBLE_DEVICES=1
+
+SCRIPT_DIR=/home/user33/kashurin/deep-reasoning
+RUNS_DIR=/home/user33/kashurin/runs
+
+cd $SCRIPT_DIR
 
 NP=1
 CUBLAS_WORKSPACE_CONFIG=:4096:2
@@ -12,21 +18,21 @@ RECURRENT_WRAPPER=modeling_amt.language_modeling:AssociativeRecurrentWrapper
 BACKBONE_CLS=transformers:AutoModelForCausalLM
 TASK_NAME=gsm8k
 ITERS=250000
-TBS=64
+TBS=256
 INPUT_SIZE=1024
 
 for N in 1; do
     MODEL_NAME=gpt2
     SEGMENT_ORDERING=regular
     MAX_N_SEGMENTS=1
-    BS=32
+    BS=16
     SCHEDULER=linear
     INPUT_SEQ_LEN=$((INPUT_SIZE))
 
     for LR in 1e-04; do
         GRADIENT_ACC_STEP=$((TBS/(BS*NP)))
-        ACCEL_CONFIG="/workspace-SR006.nfs2/bulatov/rmt/reasoning/deep-reasoning/accel_configs/accelerate_bf16.yaml"
-        MAIN_SCRIPT="/workspace-SR006.nfs2/bulatov/rmt/reasoning/deep-reasoning/run_finetuning_reasoning.py"
+        ACCEL_CONFIG="${SCRIPT_DIR}/accel_configs/accelerate_bf16.yaml"
+        MAIN_SCRIPT="${SCRIPT_DIR}/run_finetuning_reasoning.py"
 
         echo "RUNNING: TASK_NAME SRC_LEN MODEL_NAME MODEL_CLS N_SEG MEMORY_SIZE INPUT_SEQ_LEN LR N"
         echo "RUNNING: $TASK_NAME $SRC_LEN $MODEL_NAME $MODEL_CLS $MAX_N_SEGMENTS $MEMORY_SIZE $INPUT_SEQ_LEN $LR $N $ITERS $D_MEM"
@@ -34,7 +40,7 @@ for N in 1; do
         accelerate launch --num_processes $NP --config_file $ACCEL_CONFIG $MAIN_SCRIPT \
         --task_name $TASK_NAME \
         --dataset_name "booydar/gsm8k" \
-        --output_dir /workspace-SR006.nfs2/bulatov/rmt/runs/${TASK_NAME}/${MODEL_NAME}/SEGM_${MAX_N_SEGMENTS}x${INPUT_SIZE}_${INPUT_SEQ_LEN}_LR${LR}-cot \
+        --output_dir ${RUNS_DIR}/${TASK_NAME}/TR_${MODEL_NAME}/${MAX_N_SEGMENTS}x${INPUT_SIZE}_${INPUT_SEQ_LEN}_LR${LR}-cot \
         --from_pretrained $MODEL_NAME \
         --model_type $MODEL_TYPE \
         --memory_cell_cls $MEMORY_CELL \

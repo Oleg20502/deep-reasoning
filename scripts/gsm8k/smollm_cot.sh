@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-export CUDA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=3
 
 SCRIPT_DIR=/home/user33/kashurin/deep-reasoning
 RUNS_DIR=/home/user33/kashurin/runs
@@ -13,50 +13,50 @@ CUBLAS_WORKSPACE_CONFIG=:4096:2
 CUDA_LAUNCH_BLOCKING=1
 
 MODEL_TYPE=decoder
-MEMORY_CELL=modeling_rmt.language_modeling:MemoryCell
-RECURRENT_WRAPPER=modeling_rmt.experimental:RecurrentWrapperNoSegmentation
+MEMORY_CELL=modeling_amt.language_modeling:AssociativeMemoryCell
+RECURRENT_WRAPPER=modeling_amt.language_modeling:AssociativeRecurrentWrapper
 BACKBONE_CLS=transformers:AutoModelForCausalLM
 TASK_NAME=gsm8k
-ITERS=25000
+ITERS=250000
 TBS=256
-INPUT_SIZE=64
+INPUT_SIZE=512
 
 for N in 1; do
-    MODEL_NAME=HuggingFaceTB/SmolLM-135M
-    FULL_MODEL_NAME=RMT_SmolLM-135M
+    MODEL_ID=HuggingFaceTB/SmolLM2-135M
+    MODEL_NAME=SmolLM2-135M
     SEGMENT_ORDERING=regular
     MAX_N_SEGMENTS=1
-    MEMORY_SIZE=4
     BS=16
     SCHEDULER=linear
     INPUT_SEQ_LEN=$((INPUT_SIZE))
 
-    for LR in 3e-04 1e-03; do
+    for LR in 1e-04; do
         GRADIENT_ACC_STEP=$((TBS/(BS*NP)))
         ACCEL_CONFIG="${SCRIPT_DIR}/accel_configs/accelerate_bf16.yaml"
-        MAIN_SCRIPT="${SCRIPT_DIR}/run_finetuning_reasoning_rmt.py"
+        MAIN_SCRIPT="${SCRIPT_DIR}/run_finetuning_reasoning.py"
 
-        echo "RUNNING: TASK_NAME SRC_LEN FULL_MODEL_NAME MODEL_CLS N_SEG MEMORY_SIZE INPUT_SEQ_LEN LR N"
-        echo "RUNNING: $TASK_NAME $SRC_LEN $FULL_MODEL_NAME $MODEL_CLS $MAX_N_SEGMENTS $MEMORY_SIZE $INPUT_SEQ_LEN $LR $N $ITERS $D_MEM"
+        echo "RUNNING: TASK_NAME SRC_LEN MODEL_NAME MODEL_CLS N_SEG MEMORY_SIZE INPUT_SEQ_LEN LR N"
+        echo "RUNNING: $TASK_NAME $SRC_LEN $MODEL_NAME $MODEL_CLS $MAX_N_SEGMENTS $MEMORY_SIZE $INPUT_SEQ_LEN $LR $N $ITERS $D_MEM"
 
         accelerate launch --num_processes $NP --config_file $ACCEL_CONFIG $MAIN_SCRIPT \
         --task_name $TASK_NAME \
         --dataset_name "booydar/gsm8k" \
-        --output_dir ${RUNS_DIR}/${TASK_NAME}/${FULL_MODEL_NAME}/${MAX_N_SEGMENTS}x${INPUT_SIZE}_mem${MEMORY_SIZE}_LR${LR}-cot \
-        --from_pretrained $MODEL_NAME \
+        --output_dir ${RUNS_DIR}/${TASK_NAME}/TR_${MODEL_NAME}/L${INPUT_SIZE}_BS${BS}_LR${LR}-cot \
+        --from_pretrained $MODEL_ID \
         --model_type $MODEL_TYPE \
         --memory_cell_cls $MEMORY_CELL \
         --recurrent_wrapper_cls $RECURRENT_WRAPPER \
         --model_cls $BACKBONE_CLS \
-        --segment_size $INPUT_SEQ_LEN \
-        --num_mem_tokens $MEMORY_SIZE \
+        --sample_size $INPUT_SEQ_LEN \
+        --segment_size $INPUT_SIZE \
         --max_n_segments $MAX_N_SEGMENTS \
         --use_cot \
         --per_device_train_batch_size $BS --gradient_accumulation_steps $GRADIENT_ACC_STEP \
         --max_steps $ITERS \
+        --layers_attr base_model.base_model.layers \
+        --metric_for_best_model "eval_loss" \
         --greater_is_better False \
         --save_total_limit 1 \
-        --metric_for_best_model "eval_loss" \
         --k1 -1 --k2 -1 \
         --optimizer AdamW --weight_decay 0.001 \
         --learning_rate ${LR} --lr_scheduler_type $SCHEDULER --warmup_steps 3000 \
