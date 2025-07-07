@@ -358,14 +358,16 @@ if __name__ == '__main__':
         if args.attend_to_previous_input:
             mem_cell_args['attend_to_previous_input'] = args.attend_to_previous_input
         cell = memory_cell_cls(**mem_cell_args)
-        model = recurrent_wrapper_cls(cell,
-                                      segment_size=args.segment_size,
-                                      max_n_segments=args.max_n_segments,
-                                      vary_n_segments=args.vary_n_segments,
-                                      k2=args.k2,
-                                      attend_to_previous_input=args.attend_to_previous_input,
-                                      return_all_logits=False,
-                                      )
+        model = recurrent_wrapper_cls(
+            cell,
+            segment_size=args.segment_size,
+            max_n_segments=args.max_n_segments,
+            vary_n_segments=args.vary_n_segments,
+            k2=args.k2,
+            attend_to_previous_input=args.attend_to_previous_input,
+            return_all_logits=False,
+        )
+        
         # load cpt of rmt
         if args.model_cpt:
             if "safetensors" in args.model_cpt:

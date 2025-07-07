@@ -228,18 +228,13 @@ if __name__ == '__main__':
         valid_dataset = valid_dataset.filter(lambda x: x['cot_len'] <= args.max_cot_steps)
         test_dataset = test_dataset.filter(lambda x: x['cot_len'] <= args.max_cot_steps)
         logger.info(f"Filtered ds sizes: {len(train_dataset), len(valid_dataset), len(test_dataset)}")
-    if 'gsm8k' in args.task_name:
-        delim = ">> <<"
-    elif 'multiplication' in args.task_name:
-        delim = ' + '
-    else:
-        raise NotImplementedError(f"Unknown task name {args.task_name}")
 
     id_pad_value = tokenizer.pad_token_id if tokenizer.pad_token_id is not None else tokenizer.eos_token_id
-    think = tokenizer.encode('????')
-    bos = tokenizer.encode('////')
-    ans = tokenizer.encode('!!!!')
+    bos = [tokenizer.bos_token_id]
     eos = [tokenizer.eos_token_id]
+    think = tokenizer.encode("<issue_start>")
+    ans = tokenizer.encode("<issue_closed>")
+
     if 'gsm8k' in args.task_name:
         delim = ">> <<"
     elif 'multiplication' in args.task_name:
@@ -299,7 +294,7 @@ if __name__ == '__main__':
         model = model_cls(config=model_cfg)
 
         logger.info(f'Loading pretrained model: {args.from_pretrained}')
-        base_model = model_cls.from_pretrained(args.from_pretrained, use_safetensors=False)
+        base_model = model_cls.from_pretrained(args.from_pretrained)
 
         model.load_state_dict(base_model.state_dict(), strict=False)
         del base_model
@@ -317,7 +312,7 @@ if __name__ == '__main__':
                                                   torch_dtype=torch.bfloat16,
                                                   trust_remote_code=True)
             else:
-                model = model_cls.from_pretrained(args.from_pretrained, use_safetensors=False)
+                model = model_cls.from_pretrained(args.from_pretrained)
     if args.use_lora:
         peft_config = LoraConfig(
             task_type=TaskType.CAUSAL_LM,
@@ -329,73 +324,75 @@ if __name__ == '__main__':
         model = get_peft_model(model, peft_config)
         logger.info('Added LoRA, trainable parameters with LoRA only:')
         model.print_trainable_parameters()
+    
     # load cpt of backbone model
     if args.backbone_cpt:
         backbone_cpt = os.path.join(args.backbone_cpt, "model_best.pth")
         cpt = torch.load(backbone_cpt, map_location='cpu')
         model.load_state_dict(cpt['model_state_dict'], strict=False)
         logger.info(f'Loaded baseline state dict from: {args.backbone_cpt}')
-    # Pass memory settings to pretrained model
-    if args.num_mem_tokens is not None:
-        memory_cell_cls = get_cls_by_name(args.memory_cell_cls)
-        recurrent_wrapper_cls = get_cls_by_name(args.recurrent_wrapper_cls)
-        logger.info(f'Wrapping in: {memory_cell_cls} and {recurrent_wrapper_cls}')
-        mem_cell_args = dict(
-            base_model=model,
-            num_mem_tokens=args.num_mem_tokens,
-        )
-        # additional parameters for ARMT model
-        if args.d_mem is not None:
-            mem_cell_args['d_mem'] = args.d_mem
-            mem_cell_args['wrap_pos'] = args.wrap_pos
-            mem_cell_args['correction'] = not args.no_correction
-            # mem_cell_args['use_lora'] = args.use_lora
-        if args.layers_attr is not None:
-            mem_cell_args['layers_attr'] = args.layers_attr
-        if args.attend_to_previous_input:
-            mem_cell_args['attend_to_previous_input'] = args.attend_to_previous_input
-        cell = memory_cell_cls(**mem_cell_args)
-        model = recurrent_wrapper_cls(cell,
-                                      segment_size=args.segment_size,
-                                      max_n_segments=args.max_n_segments,
-                                      vary_n_segments=args.vary_n_segments,
-                                      k2=args.k2,
-                                      attend_to_previous_input=args.attend_to_previous_input,
-                                      return_all_logits=False,
-                                      )
-        # load cpt of rmt
-        if args.model_cpt:
-            if "safetensors" in args.model_cpt:
-                print(model)
-                from safetensors.torch import load_model
-                load_model(model, args.model_cpt, device="cuda:0")
-            else:
-                if ".bin" in args.model_cpt:
-                    model_cpt = args.model_cpt
-                elif "model_best" in os.listdir(args.model_cpt):
-                    model_cpt = os.path.join(args.model_cpt, "model_best", "pytorch_model.bin")
-                else:
-                    dir_files = os.listdir(args.model_cpt)
-                    checkpoint_dir = [el for el in dir_files if "checkpoint-" in el][0]
-                    model_cpt = os.path.join(args.model_cpt, checkpoint_dir, "pytorch_model.bin")
-                cpt = torch.load(model_cpt, map_location='cpu')
-                model.load_state_dict(cpt, strict=False)
-            logger.info(f'Loaded RMT state dict from: {args.model_cpt}')
-            logger.info('Trainable parameters after adding RMT/ARMT:')
-            logger.info(f'Remaining parameters: {[n for n, p in model.named_parameters() if p.requires_grad]}')
-    if args.add_lora_to_armt:
-        peft_config = LoraConfig(
-            task_type=TaskType.CAUSAL_LM,
-            inference_mode=False,
-            r=args.lora_attn_dim,
-            lora_alpha=args.lora_attn_alpha,
-            lora_dropout=args.lora_dropout
-            )
-        # add LoRA only to the inner model
-        model.memory_cell.model = get_peft_model(model.memory_cell.model, peft_config)
-        logger.info('Added LoRA, trainable parameters with LoRA only:')
-        model.memory_cell.model.print_trainable_parameters()
-        # print(model)
+    
+    # # Pass memory settings to pretrained model
+    # if args.num_mem_tokens is not None:
+    #     memory_cell_cls = get_cls_by_name(args.memory_cell_cls)
+    #     recurrent_wrapper_cls = get_cls_by_name(args.recurrent_wrapper_cls)
+    #     logger.info(f'Wrapping in: {memory_cell_cls} and {recurrent_wrapper_cls}')
+    #     mem_cell_args = dict(
+    #         base_model=model,
+    #         num_mem_tokens=args.num_mem_tokens,
+    #     )
+    #     # additional parameters for ARMT model
+    #     if args.d_mem is not None:
+    #         mem_cell_args['d_mem'] = args.d_mem
+    #         mem_cell_args['wrap_pos'] = args.wrap_pos
+    #         mem_cell_args['correction'] = not args.no_correction
+    #         # mem_cell_args['use_lora'] = args.use_lora
+    #     if args.layers_attr is not None:
+    #         mem_cell_args['layers_attr'] = args.layers_attr
+    #     if args.attend_to_previous_input:
+    #         mem_cell_args['attend_to_previous_input'] = args.attend_to_previous_input
+    #     cell = memory_cell_cls(**mem_cell_args)
+    #     model = recurrent_wrapper_cls(cell,
+    #                                   segment_size=args.segment_size,
+    #                                   max_n_segments=args.max_n_segments,
+    #                                   vary_n_segments=args.vary_n_segments,
+    #                                   k2=args.k2,
+    #                                   attend_to_previous_input=args.attend_to_previous_input,
+    #                                   return_all_logits=False,
+    #                                   )
+    #     # load cpt of rmt
+    #     if args.model_cpt:
+    #         if "safetensors" in args.model_cpt:
+    #             print(model)
+    #             from safetensors.torch import load_model
+    #             load_model(model, args.model_cpt, device="cuda:0")
+    #         else:
+    #             if ".bin" in args.model_cpt:
+    #                 model_cpt = args.model_cpt
+    #             elif "model_best" in os.listdir(args.model_cpt):
+    #                 model_cpt = os.path.join(args.model_cpt, "model_best", "pytorch_model.bin")
+    #             else:
+    #                 dir_files = os.listdir(args.model_cpt)
+    #                 checkpoint_dir = [el for el in dir_files if "checkpoint-" in el][0]
+    #                 model_cpt = os.path.join(args.model_cpt, checkpoint_dir, "pytorch_model.bin")
+    #             cpt = torch.load(model_cpt, map_location='cpu')
+    #             model.load_state_dict(cpt, strict=False)
+    #         logger.info(f'Loaded RMT state dict from: {args.model_cpt}')
+    #         logger.info('Trainable parameters after adding RMT/ARMT:')
+    #         logger.info(f'Remaining parameters: {[n for n, p in model.named_parameters() if p.requires_grad]}')
+    # if args.add_lora_to_armt:
+    #     peft_config = LoraConfig(
+    #         task_type=TaskType.CAUSAL_LM,
+    #         inference_mode=False,
+    #         r=args.lora_attn_dim,
+    #         lora_alpha=args.lora_attn_alpha,
+    #         lora_dropout=args.lora_dropout
+    #         )
+    #     # add LoRA only to the inner model
+    #     model.memory_cell.model = get_peft_model(model.memory_cell.model, peft_config)
+    #     logger.info('Added LoRA, trainable parameters with LoRA only:')
+    #     model.memory_cell.model.print_trainable_parameters()
+    #     # print(model)
     if args.freeze_model_weights:
         for n, p in model.named_parameters():
             if 'memory' not in n and 'lora' not in n and 'adapter' not in n:
@@ -433,14 +430,10 @@ if __name__ == '__main__':
 
     training_args_dict['remove_unused_columns'] = False
     training_args_dict['save_safetensors'] = False
-    training_args_dict['bf16'] = True
     training_args_dict['label_names'] = ['labels']
-    training_args_dict['evaluation_strategy'] = 'steps'
-    if training_args_dict.get('per_device_train_batch_size') == 1:
-        training_args_dict['per_device_eval_batch_size'] = training_args_dict.get('per_device_train_batch_size')
-    else:
-        training_args_dict['per_device_eval_batch_size'] = training_args_dict.get('per_device_train_batch_size') // 2
-    training_args_dict['eval_accumulation_steps'] = 32
+    training_args_dict['eval_strategy'] = 'steps'
+    training_args_dict['per_device_eval_batch_size'] = training_args_dict.get('per_device_train_batch_size', 1)
+    training_args_dict['eval_accumulation_steps'] = 8
     if args.d_mem is None:
         # for now, gradient checkpointing doesn't supported for ARMT
         training_args_dict['gradient_checkpointing'] = True
@@ -453,8 +446,12 @@ if __name__ == '__main__':
     if args.num_mem_tokens is not None:
         # fix max_seq_length warning
         training_args_dict["max_seq_length"] = args.sample_size
-        model.to(torch.bfloat16)
+
+    if args.sample_size is not None:
+        training_args_dict["max_seq_length"] = args.sample_size
+
     training_args = SFTConfig(**training_args_dict)
+
 
     def compute_accuracy(eval_pred):
         preds = eval_pred.predictions.argmax(axis=-1)[:, :-1]
@@ -502,7 +499,7 @@ if __name__ == '__main__':
         args=training_args,
         train_dataset=train_dataset,
         eval_dataset=valid_dataset,
-        tokenizer=tokenizer,
+        processing_class=tokenizer,
         data_collator=collate_fn,
         compute_metrics=compute_accuracy,
         optimizers=(optimizer, scheduler)
@@ -513,7 +510,7 @@ if __name__ == '__main__':
             early_stopping_patience=args.early_stopping_patience
         )
         trainer.add_callback(early_stopping)
-    start_metrics = trainer.evaluate()
-    logger.info(f"Metrics of initial model: {start_metrics}")
+    # start_metrics = trainer.evaluate()
+    # logger.info(f"Metrics of initial model: {start_metrics}")
     if not args.validate_only:
         trainer.train(resume_from_checkpoint=args.checkpoint)

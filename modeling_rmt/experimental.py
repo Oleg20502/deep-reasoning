@@ -7,14 +7,17 @@ from transformers import StoppingCriteria
 
 
 class RecurrentWrapperNoSegmentation(RecurrentWrapper):
-    def forward(self, segments, labels, output_attentions=None, output_hidden_states=None):
+    def forward(self, segments, labels=None, output_attentions=None, output_hidden_states=None):
         memory_state = None
 
         cell_outputs = []
         for seg_num, segment in enumerate(segments):
-            cell_out, memory_state = self.memory_cell(input_ids=segment['input_ids'],
-                                                      attention_mask=segment['attention_mask'],
-                                                      memory_state=memory_state, output_hidden_states=True)
+            cell_out, memory_state = self.memory_cell(
+                input_ids=segment['input_ids'],
+                attention_mask=segment['attention_mask'],
+                memory_state=memory_state,
+                output_hidden_states=True
+            )
             cell_outputs.append(cell_out)
             memory_state = self.manage_gradients(memory_state, seg_num)
 
@@ -24,10 +27,15 @@ class RecurrentWrapperNoSegmentation(RecurrentWrapper):
         return out
 
     def generate(self, segments, **generate_kwargs):
-        raise NotImplementedError("Generation not implemented for this wrapper.")
+        # raise NotImplementedError("Generation not implemented for this wrapper.")
         memory_state = None
         for seg_num, segment in enumerate(segments[:-1]):
-            cell_out, memory_state = self.memory_cell(**segment, memory_state=memory_state, output_hidden_states=True)
+            cell_out, memory_state = self.memory_cell(
+                input_ids=segment['input_ids'],
+                attention_mask=segment['attention_mask'],
+                memory_state=memory_state,
+                output_hidden_states=True
+            )
 
         final_segment = segments[-1]
         out = self.memory_cell.generate(**final_segment, memory_state=memory_state, **generate_kwargs)
@@ -79,7 +87,6 @@ class RecurrentWrapperNoSegmentation(RecurrentWrapper):
         num_segments = len(segments)
         out['loss'] = sum([proxy_out[f'loss_{seg_num}'] for seg_num in range(num_segments)]) / num_segments
         out['logits'] = torch.cat([cell_out.logits for cell_out in cell_outputs], dim=1)
-        # print(out.keys(), out.loss)
 
         return out
 
@@ -145,6 +152,8 @@ class RecurrentWrapperNoSegmentationWeighLoss(RecurrentWrapperNoSegmentation):
     def gradient_checkpointing_enable(self, *args, **kwargs):
         if hasattr(self.memory_cell.model, "gradient_checkpointing_enable"):
             return self.memory_cell.model.gradient_checkpointing_enable(*args, **kwargs)
+
+
 class StopOnSpecialTokenCriteria(StoppingCriteria):
     def __init__(self, special_token_ids):
         self.special_token_ids = set(special_token_ids)

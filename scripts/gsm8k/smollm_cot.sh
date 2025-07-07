@@ -1,14 +1,11 @@
 #!/usr/bin/env bash
 set -e
 
-export CUDA_VISIBLE_DEVICES=3
-
 SCRIPT_DIR=/home/user33/kashurin/deep-reasoning
 RUNS_DIR=/home/user33/kashurin/runs
 
 cd $SCRIPT_DIR
 
-NP=1
 CUBLAS_WORKSPACE_CONFIG=:4096:2
 CUDA_LAUNCH_BLOCKING=1
 
@@ -16,41 +13,40 @@ MODEL_TYPE=decoder
 MEMORY_CELL=modeling_amt.language_modeling:AssociativeMemoryCell
 RECURRENT_WRAPPER=modeling_amt.language_modeling:AssociativeRecurrentWrapper
 BACKBONE_CLS=transformers:AutoModelForCausalLM
+
+export CUDA_VISIBLE_DEVICES="2,3"
+NP=2
 TASK_NAME=gsm8k
-ITERS=250000
-TBS=256
-INPUT_SIZE=512
+ITERS=25000
+GRADIENT_ACC_STEP=8   # should be 8
+BS=32
+INPUT_SEQ_LEN=512
+MAX_COT_STEPS=8
+MODEL_ID=HuggingFaceTB/SmolLM2-135M
+MODEL_NAME=SmolLM2-135M
+SCHEDULER=constant
+
+ACCEL_CONFIG="${SCRIPT_DIR}/accel_configs/accelerate_fp16_stage2.yaml"
+MAIN_SCRIPT="${SCRIPT_DIR}/run_finetuning_reasoning-v2.py"
 
 for N in 1; do
-    MODEL_ID=HuggingFaceTB/SmolLM2-135M
-    MODEL_NAME=SmolLM2-135M
-    SEGMENT_ORDERING=regular
-    MAX_N_SEGMENTS=1
-    BS=16
-    SCHEDULER=linear
-    INPUT_SEQ_LEN=$((INPUT_SIZE))
-
-    for LR in 1e-04; do
-        GRADIENT_ACC_STEP=$((TBS/(BS*NP)))
-        ACCEL_CONFIG="${SCRIPT_DIR}/accel_configs/accelerate_bf16.yaml"
-        MAIN_SCRIPT="${SCRIPT_DIR}/run_finetuning_reasoning.py"
-
+    for LR in 3e-04; do
         echo "RUNNING: TASK_NAME SRC_LEN MODEL_NAME MODEL_CLS N_SEG MEMORY_SIZE INPUT_SEQ_LEN LR N"
         echo "RUNNING: $TASK_NAME $SRC_LEN $MODEL_NAME $MODEL_CLS $MAX_N_SEGMENTS $MEMORY_SIZE $INPUT_SEQ_LEN $LR $N $ITERS $D_MEM"
 
         accelerate launch --num_processes $NP --config_file $ACCEL_CONFIG $MAIN_SCRIPT \
         --task_name $TASK_NAME \
         --dataset_name "booydar/gsm8k" \
-        --output_dir ${RUNS_DIR}/${TASK_NAME}/TR_${MODEL_NAME}/L${INPUT_SIZE}_BS${BS}_LR${LR}-cot \
+        --output_dir ${RUNS_DIR}/${TASK_NAME}/TR_${MODEL_NAME}/L${INPUT_SEQ_LEN}_BS${BS}_LR${LR}-cot \
         --from_pretrained $MODEL_ID \
         --model_type $MODEL_TYPE \
         --memory_cell_cls $MEMORY_CELL \
         --recurrent_wrapper_cls $RECURRENT_WRAPPER \
         --model_cls $BACKBONE_CLS \
         --sample_size $INPUT_SEQ_LEN \
-        --segment_size $INPUT_SIZE \
-        --max_n_segments $MAX_N_SEGMENTS \
+        --max_cot_steps $MAX_COT_STEPS \
         --use_cot \
+        --fp16 true \
         --per_device_train_batch_size $BS --gradient_accumulation_steps $GRADIENT_ACC_STEP \
         --max_steps $ITERS \
         --layers_attr base_model.base_model.layers \
@@ -67,7 +63,7 @@ for N in 1; do
         --seed $((N+42)) \
         --max_grad_norm 1.0 \
         --mask_non_completion \
-        --report_to tensorboard
+        --report_to wandb
     done
 done
 

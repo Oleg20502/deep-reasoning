@@ -233,18 +233,13 @@ if __name__ == '__main__':
         valid_dataset = valid_dataset.filter(lambda x: x['cot_len'] <= args.max_cot_steps)
         test_dataset = test_dataset.filter(lambda x: x['cot_len'] <= args.max_cot_steps)
         logger.info(f"Filtered ds sizes: {len(train_dataset), len(valid_dataset), len(test_dataset)}")
-    if 'gsm8k' in args.task_name:
-        delim = ">> <<"
-    elif 'multiplication' in args.task_name:
-        delim = ' + '
-    else:
-        raise NotImplementedError(f"Unknown task name {args.task_name}")
 
     id_pad_value = tokenizer.pad_token_id if tokenizer.pad_token_id is not None else tokenizer.eos_token_id
-    think = tokenizer.encode('????')
-    bos = tokenizer.encode('////')
-    ans = tokenizer.encode('!!!!')
+    bos = [tokenizer.bos_token_id]
     eos = [tokenizer.eos_token_id]
+    think = tokenizer.encode("<issue_start>")
+    ans = tokenizer.encode("<issue_closed>")
+
     if 'gsm8k' in args.task_name:
         delim = ">> <<"
     elif 'multiplication' in args.task_name:
@@ -480,7 +475,7 @@ if __name__ == '__main__':
     training_args_dict['save_safetensors'] = False
     training_args_dict['label_names'] = ['labels']
     training_args_dict['eval_strategy'] = 'steps'
-    per_device_eval_batch_size = training_args_dict.get('per_device_train_batch_size') // 8
+    per_device_eval_batch_size = training_args_dict.get('per_device_train_batch_size') // 2
     training_args_dict['per_device_eval_batch_size'] = max(per_device_eval_batch_size, 1)
     training_args_dict['eval_accumulation_steps'] = 16
     if args.d_mem is None:

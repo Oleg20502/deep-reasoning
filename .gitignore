@@ -132,4 +132,8 @@ cython_debug/
 .vscode/
 
 # PyCharm
-.idea/ 
+.idea/
+
+# Weights & Biases
+wandb/
+*.wandb 
