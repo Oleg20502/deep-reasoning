@@ -431,9 +431,7 @@ if __name__ == '__main__':
     training_args_dict['remove_unused_columns'] = False
     training_args_dict['save_safetensors'] = False
     training_args_dict['label_names'] = ['labels']
-    training_args_dict['eval_strategy'] = 'steps'
-    training_args_dict['per_device_eval_batch_size'] = training_args_dict.get('per_device_train_batch_size', 1)
-    training_args_dict['eval_accumulation_steps'] = 8
+    
     if args.d_mem is None:
         # for now, gradient checkpointing doesn't supported for ARMT
         training_args_dict['gradient_checkpointing'] = True

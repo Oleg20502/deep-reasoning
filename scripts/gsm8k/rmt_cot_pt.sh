@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
+
+# train model from scratch (pre tain) for reasoning
+
 set -e
 
-SCRIPT_DIR=/home/user30/kashurin/deep-reasoning
-RUNS_DIR=/home/user30/kashurin/runs
+SCRIPT_DIR=/home/user33/kashurin/deep-reasoning
+RUNS_DIR=/home/user33/kashurin/runs
 
 cd $SCRIPT_DIR
 
@@ -17,19 +20,18 @@ BACKBONE_CLS=transformers:AutoModelForCausalLM
 export CUDA_VISIBLE_DEVICES="0,1"
 NP=2
 TASK_NAME=gsm8k
-N_EPOCHS=25
+ITERS=25000
 GRADIENT_ACC_STEP=8   # should be 8
-BS=64
+BS=14
 INPUT_SEQ_LEN=64
-MODEL_CPT=/home/user30/kashurin/checkpoint-29500/pytorch_model.bin
-MODEL_ID=HuggingFaceTB/SmolLM2-135M
-FULL_MODEL_NAME=RMT_SmolLM2-135M
+MODEL_NAME=HuggingFaceTB/SmolLM-135M
+FULL_MODEL_NAME=RMT_SmolLM-135M
 SEGMENT_ORDERING=regular
 MAX_N_SEGMENTS=10
 MEMORY_SIZE=16
 SCHEDULER=constant
 
-ACCEL_CONFIG="${SCRIPT_DIR}/accel_configs/accelerate_fp32_stage2.yaml"
+ACCEL_CONFIG="${SCRIPT_DIR}/accel_configs/accelerate_fp16.yaml"
 MAIN_SCRIPT="${SCRIPT_DIR}/run_finetuning_reasoning_rmt-v2.py"
 
 for N in 1; do
@@ -40,9 +42,8 @@ for N in 1; do
         accelerate launch --num_processes $NP --config_file $ACCEL_CONFIG $MAIN_SCRIPT \
         --task_name $TASK_NAME \
         --dataset_name "booydar/gsm8k" \
-        --output_dir ${RUNS_DIR}/${TASK_NAME}/${FULL_MODEL_NAME}/${MAX_N_SEGMENTS}x${INPUT_SEQ_LEN}_mem${MEMORY_SIZE}_BS${BS}_LR${LR}-cot-sft \
-        --model_cpt $MODEL_CPT \
-        --from_pretrained $MODEL_ID \
+        --output_dir ${RUNS_DIR}/${TASK_NAME}/${FULL_MODEL_NAME}/${MAX_N_SEGMENTS}x${INPUT_SEQ_LEN}_mem${MEMORY_SIZE}_BS${BS}_LR${LR}-cot \
+        --from_pretrained $MODEL_NAME \
         --model_type $MODEL_TYPE \
         --memory_cell_cls $MEMORY_CELL \
         --recurrent_wrapper_cls $RECURRENT_WRAPPER \
@@ -52,29 +53,23 @@ for N in 1; do
         --max_n_segments $MAX_N_SEGMENTS \
         --max_cot_steps $((MAX_N_SEGMENTS - 2)) \
         --use_cot \
-        --per_device_train_batch_size $BS \
-        --per_device_eval_batch_size 8 \
-        --gradient_accumulation_steps $GRADIENT_ACC_STEP \
-        --num_train_epochs $N_EPOCHS \
-        --metric_for_best_model "eval_loss" \
+        --per_device_train_batch_size $BS --gradient_accumulation_steps $GRADIENT_ACC_STEP \
+        --max_steps $ITERS \
         --greater_is_better False \
         --save_total_limit 1 \
+        --metric_for_best_model "eval_loss" \
         --k1 -1 --k2 -1 \
         --optimizer AdamW --weight_decay 0.001 \
-        --learning_rate ${LR} \
-        --lr_scheduler_type $SCHEDULER \
-        --warmup_steps 500 \
+        --learning_rate ${LR} --lr_scheduler_type $SCHEDULER --warmup_steps 3000 \
         --data_n_workers 2 \
-        --logging_steps 10 --eval_steps 50 --save_steps 50 \
-        --eval_strategy steps \
-        --eval_accumulation_steps 8 \
+        --fp16 true \
+        --logging_steps 50 --eval_steps 250 --save_steps 500 \
         --show_valid_examples 0 \
         --early_stopping_patience 75 \
         --seed $((N+42)) \
         --max_grad_norm 1.0 \
         --mask_non_completion \
-        --report_to wandb \
-        --log_level info
+        --report_to wandb
     done
 done
 

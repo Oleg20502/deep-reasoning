@@ -329,15 +329,14 @@ if __name__ == '__main__':
         logger.info('Added adapters')
     else:
         # TODO: fix if for Qwen and Llama
-        if not args.from_pretrained:
+        if args.from_pretrained is None and args.model_cfg is not None:
             model_cfg = AutoConfig.from_pretrained(args.model_cfg)
             model = model_cls.from_config(model_cfg)
-        else:
+        elif args.from_pretrained is not None:
             logger.info(f'Loading pretrained model: {args.from_pretrained}')
             if "Qwen" in args.from_pretrained or "Llama" in args.from_pretrained:
                 model = model_cls.from_pretrained(args.from_pretrained,
                                                   attn_implementation="flash_attention_2",
-                                                  torch_dtype=torch.bfloat16,
                                                   trust_remote_code=True)
             else:
                 model = model_cls.from_pretrained(args.from_pretrained)
@@ -474,15 +473,11 @@ if __name__ == '__main__':
     training_args_dict['remove_unused_columns'] = False
     training_args_dict['save_safetensors'] = False
     training_args_dict['label_names'] = ['labels']
-    training_args_dict['eval_strategy'] = 'steps'
-    per_device_eval_batch_size = training_args_dict.get('per_device_train_batch_size') // 2
-    training_args_dict['per_device_eval_batch_size'] = max(per_device_eval_batch_size, 1)
-    training_args_dict['eval_accumulation_steps'] = 16
+
     if args.d_mem is None:
         # for now, gradient checkpointing doesn't supported for ARMT
         training_args_dict['gradient_checkpointing'] = True
         training_args_dict['gradient_checkpointing_kwargs'] = {'use_reentrant': False}
-    training_args_dict['log_level'] = 'debug'
     training_args_dict['load_best_model_at_end'] = args.early_stopping_patience != -1
 
     training_args_dict['dataset_kwargs'] = {"skip_prepare_dataset": True}
@@ -490,6 +485,7 @@ if __name__ == '__main__':
     if args.num_mem_tokens is not None:
         # fix max_seq_length warning
         training_args_dict["max_seq_length"] = args.segment_size
+    
     training_args = SFTConfig(**training_args_dict)
 
     def compute_accuracy(eval_pred):
@@ -549,7 +545,7 @@ if __name__ == '__main__':
             early_stopping_patience=args.early_stopping_patience
         )
         trainer.add_callback(early_stopping)
-    start_metrics = trainer.evaluate()
-    logger.info(f"Metrics of initial model: {start_metrics}")
+    # start_metrics = trainer.evaluate()
+    # logger.info(f"Metrics of initial model: {start_metrics}")
     if not args.validate_only:
         trainer.train(resume_from_checkpoint=args.checkpoint)

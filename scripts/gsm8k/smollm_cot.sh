@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-SCRIPT_DIR=/home/user33/kashurin/deep-reasoning
-RUNS_DIR=/home/user33/kashurin/runs
+SCRIPT_DIR=/home/user30/kashurin/deep-reasoning
+RUNS_DIR=/home/user30/kashurin/runs
 
 cd $SCRIPT_DIR
 
@@ -17,7 +17,7 @@ BACKBONE_CLS=transformers:AutoModelForCausalLM
 export CUDA_VISIBLE_DEVICES="2,3"
 NP=2
 TASK_NAME=gsm8k
-ITERS=25000
+N_EPOCHS=25
 GRADIENT_ACC_STEP=8   # should be 8
 BS=32
 INPUT_SEQ_LEN=512
@@ -26,7 +26,7 @@ MODEL_ID=HuggingFaceTB/SmolLM2-135M
 MODEL_NAME=SmolLM2-135M
 SCHEDULER=constant
 
-ACCEL_CONFIG="${SCRIPT_DIR}/accel_configs/accelerate_fp16_stage2.yaml"
+ACCEL_CONFIG="${SCRIPT_DIR}/accel_configs/accelerate_fp32_stage2.yaml"
 MAIN_SCRIPT="${SCRIPT_DIR}/run_finetuning_reasoning-v2.py"
 
 for N in 1; do
@@ -46,24 +46,30 @@ for N in 1; do
         --sample_size $INPUT_SEQ_LEN \
         --max_cot_steps $MAX_COT_STEPS \
         --use_cot \
-        --fp16 true \
-        --per_device_train_batch_size $BS --gradient_accumulation_steps $GRADIENT_ACC_STEP \
-        --max_steps $ITERS \
+        --per_device_train_batch_size $BS \
+        --per_device_eval_batch_size 8 \
+        --gradient_accumulation_steps $GRADIENT_ACC_STEP \
+        --num_train_epochs $N_EPOCHS \
         --layers_attr base_model.base_model.layers \
         --metric_for_best_model "eval_loss" \
         --greater_is_better False \
         --save_total_limit 1 \
         --k1 -1 --k2 -1 \
         --optimizer AdamW --weight_decay 0.001 \
-        --learning_rate ${LR} --lr_scheduler_type $SCHEDULER --warmup_steps 3000 \
-        --data_n_workers 2 \
-        --logging_steps 50 --eval_steps 250 --save_steps 500 \
+        --learning_rate ${LR} \
+        --lr_scheduler_type $SCHEDULER \
+        --warmup_steps 1000 \
+        --data_n_workers 4 \
+        --logging_steps 10 --eval_steps 100 --save_steps 100 \
+        --eval_strategy steps \
+        --eval_accumulation_steps 8 \
         --show_valid_examples 0 \
         --early_stopping_patience 75 \
         --seed $((N+42)) \
         --max_grad_norm 1.0 \
         --mask_non_completion \
-        --report_to wandb
+        --report_to wandb \
+        --log_level info
     done
 done
 
