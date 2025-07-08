@@ -10,7 +10,7 @@ CUDA_LAUNCH_BLOCKING=1
 
 MODEL_TYPE=decoder
 MEMORY_CELL=modeling_rmt.language_modeling:MemoryCell
-RECURRENT_WRAPPER=modeling_rmt.language_modeling:RecurrentWrapper
+RECURRENT_WRAPPER=modeling_rmt.language_modeling:RecurrentWrapperNoSegmentation
 BACKBONE_CLS=transformers:AutoModelForCausalLM
 DATASET_NAME=pg19
 METRIC=exact_match

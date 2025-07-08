@@ -110,7 +110,6 @@ class MemoryCellSmart(torch.nn.Module):
         out = self.model.generate(inputs_embeds=seg_kwargs['inputs_embeds'], attention_mask=seg_kwargs['attention_mask'], **generate_kwargs)
         return out
 
-
     def process_output(self, model_outputs, text_mask, write_mem_mask, **kwargs):
         if self.num_mem_tokens not in {0, None}:
             out = CausalLMOutputWithCrossAttentions()

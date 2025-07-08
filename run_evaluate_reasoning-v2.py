@@ -36,7 +36,7 @@ if __name__ == '__main__':
     model = AutoModelForCausalLM.from_pretrained(args.from_pretrained)
     tokenizer = AutoTokenizer.from_pretrained(args.from_pretrained)
     
-    id_pad_value = tokenizer.pad_token_id if tokenizer.pad_token_id is not None else tokenizer.eos_token_id
+    pad = tokenizer.pad_token_id if tokenizer.pad_token_id is not None else tokenizer.eos_token_id
     bos = [tokenizer.bos_token_id]
     eos = [tokenizer.eos_token_id]
     think = tokenizer.encode("<issue_start>")
@@ -84,9 +84,9 @@ if __name__ == '__main__':
             labels_mask.append(lab_mask)
             attention_mask.append(torch.ones_like(inp_ids))
 
-        input_ids = pad_sequence(input_ids, padding_value=id_pad_value, batch_first=True)
+        input_ids = pad_sequence(input_ids, padding_value=pad, batch_first=True)
         attention_mask = pad_sequence(attention_mask, padding_value=0, batch_first=True)
-        labels = pad_sequence(labels, padding_value=id_pad_value, batch_first=True)
+        labels = pad_sequence(labels, padding_value=pad, batch_first=True)
         labels_mask = pad_sequence(labels_mask, padding_value=0, batch_first=True)
 
         collated = {'input_ids': input_ids,

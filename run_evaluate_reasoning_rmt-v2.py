@@ -40,7 +40,7 @@ if __name__ == '__main__':
     model = AutoModelForCausalLM.from_pretrained(args.from_pretrained)
     tokenizer = AutoTokenizer.from_pretrained(args.from_pretrained)
     
-    id_pad_value = tokenizer.pad_token_id if tokenizer.pad_token_id is not None else tokenizer.eos_token_id
+    pad = tokenizer.pad_token_id if tokenizer.pad_token_id is not None else tokenizer.eos_token_id
     bos = [tokenizer.bos_token_id]
     eos = [tokenizer.eos_token_id]
     think = tokenizer.encode("<issue_start>")
@@ -114,7 +114,7 @@ if __name__ == '__main__':
             labels = [s[i]['labels'] for s in segments_batch]
             labels_mask = [s[i]['labels_mask'] for s in segments_batch]
 
-            input_ids = pad_sequence(input_ids, batch_first=True, padding_value=id_pad_value)
+            input_ids = pad_sequence(input_ids, batch_first=True, padding_value=pad)
             attention_mask = pad_sequence(attention_mask, batch_first=True, padding_value=0)
             labels = pad_sequence(labels, batch_first=True, padding_value=-100)
             labels_mask = pad_sequence(labels_mask, batch_first=True, padding_value=False)

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-SCRIPT_DIR=/home/user30/kashurin/deep-reasoning
-RUNS_DIR=/home/user30/kashurin/runs
+SCRIPT_DIR=/home/user33/kashurin/deep-reasoning
+RUNS_DIR=/home/user33/kashurin/runs
 
 cd $SCRIPT_DIR
 
@@ -10,18 +10,18 @@ CUBLAS_WORKSPACE_CONFIG=:4096:2
 CUDA_LAUNCH_BLOCKING=1
 
 MODEL_TYPE=decoder
-MEMORY_CELL=modeling_rmt.language_modeling:MemoryCell
-RECURRENT_WRAPPER=modeling_rmt.experimental:RecurrentWrapperNoSegmentation
+MEMORY_CELL=modeling_rmt.experimental:MemoryCellSmart
+RECURRENT_WRAPPER=modeling_rmt.experimental:RecurrentWrapper
 BACKBONE_CLS=transformers:AutoModelForCausalLM
 
-export CUDA_VISIBLE_DEVICES="0,1"
+export CUDA_VISIBLE_DEVICES="2,3"
 NP=2
 TASK_NAME=gsm8k
 N_EPOCHS=25
 GRADIENT_ACC_STEP=8   # should be 8
 BS=64
 INPUT_SEQ_LEN=64
-MODEL_CPT=/home/user30/kashurin/checkpoint-29500/pytorch_model.bin
+MODEL_CPT=/home/user33/kashurin/RMT_SmolLM2-135M/pt/checkpoint-29500/pytorch_model.bin
 MODEL_ID=HuggingFaceTB/SmolLM2-135M
 FULL_MODEL_NAME=RMT_SmolLM2-135M
 SEGMENT_ORDERING=regular
@@ -30,7 +30,7 @@ MEMORY_SIZE=16
 SCHEDULER=constant
 
 ACCEL_CONFIG="${SCRIPT_DIR}/accel_configs/accelerate_fp32_stage2.yaml"
-MAIN_SCRIPT="${SCRIPT_DIR}/run_finetuning_reasoning_rmt-v2.py"
+MAIN_SCRIPT="${SCRIPT_DIR}/run_finetuning_reasoning_rmt-v3.py"
 
 for N in 1; do
     for LR in 3e-04; do
