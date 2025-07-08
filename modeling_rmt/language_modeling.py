@@ -48,6 +48,8 @@ class MemoryCell(torch.nn.Module):
         inputs_embeds = kwargs.get('inputs_embeds')
         if inputs_embeds is None:
             inputs_embeds = self.model.get_input_embeddings()(input_ids)
+        else:
+            raise ValueError("inputs_embeds is not supported for memory cells") # test "if"
 
         if self.num_mem_tokens > 0:
             if write_mem:

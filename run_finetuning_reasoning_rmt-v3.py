@@ -23,7 +23,7 @@ from transformers import AutoConfig, AutoTokenizer, HfArgumentParser  # noqa: E4
 # from lm_experiments_tools.utils import get_cls_by_name, get_optimizer, prepare_run  # noqa: E402
 from lm_experiments_tools.utils import get_cls_by_name
 
-from utils.reasoning import make_segment, split_cot
+from utils.reasoning import make_segment_with_mem, split_cot
 
 logger_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 logging.basicConfig(format=logger_fmt, level=logging.INFO)
@@ -239,6 +239,7 @@ if __name__ == '__main__':
     eos = [tokenizer.eos_token_id]
     think = tokenizer.encode("<issue_start>")
     ans = tokenizer.encode("<issue_closed>")
+    mem_token = tokenizer.encode("<empty_output>")
 
     if 'gsm8k' in args.task_name:
         delim = ">> <<"
@@ -251,7 +252,6 @@ if __name__ == '__main__':
     # ============================
     # === Prepare data collator ===
     # ============================
-
     def collate_fn(batch):
         # first, we segment each sample into task, cot steps and labels
         segments_batch = []
@@ -266,19 +266,45 @@ if __name__ == '__main__':
             cot_segment_tokens = tokenizer.batch_encode_plus(cot_segments, add_special_tokens=False)['input_ids']
 
             segments = []
-            segments.append(make_segment(bos + task_tokens + think, loss=False))
+            segments.append(make_segment_with_mem(
+                bos + task_tokens + think,
+                loss=False,
+                mem_token=mem_token[0],
+                num_mem_tokens=args.num_mem_tokens,
+            ))
             for segment in cot_segment_tokens[:-1]:
-                segments.append(make_segment(bos + segment + think, loss=True))
-            segments.append(make_segment(bos + cot_segment_tokens[-1] + ans, loss=True))
+                segments.append(make_segment_with_mem(
+                    bos + segment + think,
+                    loss=True,
+                    mem_token=mem_token[0],
+                    num_mem_tokens=args.num_mem_tokens,
+                ))
+            segments.append(make_segment_with_mem(
+                bos + cot_segment_tokens[-1] + ans,
+                loss=True,
+                mem_token=mem_token[0],
+                num_mem_tokens=args.num_mem_tokens,
+            ))
 
-            segments.append(make_segment(bos + labels_tokens + eos, loss=True))
+            segments.append(make_segment_with_mem(
+                bos + labels_tokens + eos,
+                loss=True,
+                mem_token=mem_token[0],
+                num_mem_tokens=args.num_mem_tokens,
+            ))
             segments_batch.append(segments)
 
         # if some samples have less segments than others, we pad them with empty segments
         num_segments = max(len(segments) for segments in segments_batch)
         for segments in segments_batch:
             if len(segments) < num_segments:
-                segments.extend([make_segment(eos, loss=False)] * (num_segments - len(segments)))
+                segments.extend([
+                    make_segment_with_mem(
+                        eos,
+                        loss=False,
+                        mem_token=mem_token[0],
+                        num_mem_tokens=args.num_mem_tokens,
+                    )] * (num_segments - len(segments)))
 
         # prepare segments for the whole batch
         batch_segments = []
@@ -287,18 +313,26 @@ if __name__ == '__main__':
             attention_mask = [s[i]['attention_mask'] for s in segments_batch]
             labels = [s[i]['labels'] for s in segments_batch]
             labels_mask = [s[i]['labels_mask'] for s in segments_batch]
-            # FIXME, pad by right side!!!
+            text_mask = [s[i]['text_mask'] for s in segments_batch]
+            read_mem_mask = [s[i]['read_mem_mask'] for s in segments_batch]
+            write_mem_mask = [s[i]['write_mem_mask'] for s in segments_batch]
 
             input_ids = pad_sequence(input_ids, batch_first=True, padding_value=id_pad_value)
             attention_mask = pad_sequence(attention_mask, batch_first=True, padding_value=0)
             labels = pad_sequence(labels, batch_first=True, padding_value=-100)
             labels_mask = pad_sequence(labels_mask, batch_first=True, padding_value=False)
+            text_mask = pad_sequence(text_mask, batch_first=True, padding_value=True)
+            read_mem_mask = pad_sequence(read_mem_mask, batch_first=True, padding_value=False)
+            write_mem_mask = pad_sequence(write_mem_mask, batch_first=True, padding_value=False)
 
             batch_segment = {'input_ids': input_ids,
-                             'attention_mask': attention_mask,
-                             'labels_mask': labels_mask,
-                             'labels': labels
-                             }
+                            'attention_mask': attention_mask,
+                            'labels_mask': labels_mask,
+                            'labels': labels,
+                            'text_mask': text_mask,
+                            'read_mem_mask': read_mem_mask,
+                            'write_mem_mask': write_mem_mask
+                            }
             batch_segments.append(batch_segment)
         full_labels = torch.cat([s['labels'] for s in batch_segments], dim=1)
         return {"segments": batch_segments, 'labels': full_labels}

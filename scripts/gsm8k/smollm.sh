@@ -17,12 +17,13 @@ BACKBONE_CLS=transformers:AutoModelForCausalLM
 export CUDA_VISIBLE_DEVICES="2,3"
 NP=2
 TASK_NAME=gsm8k
-N_EPOCHS=20
+N_EPOCHS=10
 GRADIENT_ACC_STEP=8   # should be 8
 BS=32
 INPUT_SEQ_LEN=512
-MODEL_ID=gpt2
-MODEL_NAME=GPT2
+CHECKPOINT=/home/user33/kashurin/runs/gsm8k/TR_SmolLM2-135M/L512_BS32_LR3e-04-sft/checkpoint-300
+MODEL_ID=HuggingFaceTB/SmolLM2-135M
+MODEL_NAME=SmolLM2-135M
 SCHEDULER=constant
 
 ACCEL_CONFIG="${SCRIPT_DIR}/accel_configs/accelerate_fp32_stage2.yaml"
@@ -38,6 +39,7 @@ for N in 1; do
         --dataset_name "booydar/gsm8k" \
         --output_dir ${RUNS_DIR}/${TASK_NAME}/TR_${MODEL_NAME}/L${INPUT_SEQ_LEN}_BS${BS}_LR${LR}-sft \
         --from_pretrained $MODEL_ID \
+        --checkpoint $CHECKPOINT \
         --model_type $MODEL_TYPE \
         --model_cls $BACKBONE_CLS \
         --sample_size $INPUT_SEQ_LEN \
