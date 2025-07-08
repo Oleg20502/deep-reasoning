@@ -9,6 +9,7 @@ from trl import SFTTrainer, SFTConfig
 from transformers import EarlyStoppingCallback, set_seed
 from torch.optim.lr_scheduler import LambdaLR
 from torch.optim import AdamW
+import random
 # from lm_experiments_tools.dataset_preprocessing import load_and_preprocess_task, combine_datasets
 # from lm_experiments_tools.instruction_utils import mask_non_completion, mask_non_completion_multi
 
@@ -174,6 +175,12 @@ parser.add_argument('--adapter_bottleneck_dim', type=int, default=512, help='')
 parser.add_argument('--adapter_dropout', type=float, default=0.1, help='')
 parser.add_argument('--adapter_scale', type=float, default=4.0, help='')
 
+###### Summer school args
+parser.add_argument('--reasoning_mode',
+                    type=str, 
+                    default='default', 
+                             )
+
 
 if __name__ == '__main__':
     args = parser.parse_args()
@@ -253,26 +260,108 @@ if __name__ == '__main__':
     # ============================
 
     def collate_fn(batch):
-        # first, we segment each sample into task, cot steps and labels
         segments_batch = []
+        mode = getattr(args, 'reasoning_mode', 'default')
+        latent_seq_len = getattr(args, 'latent_seq_len', 5)
+        reasoning_token = getattr(args, 'reasoning_token', 'REASON')
+
+        # Pre-encode latent reasoning token
+        latent_tokens = tokenizer.convert_tokens_to_ids([reasoning_token] * latent_seq_len)
+
         for sample in batch:
             task, lab, cot = sample['task'], sample['labels'], sample['cot']
             task_tokens = tokenizer.encode(task, add_special_tokens=False)
             labels_tokens = tokenizer.encode(lab, add_special_tokens=False)
+
             if getattr(args, 'use_cot', False):
                 cot_segments = split_cot(cot, by=delim)
             else:
                 cot_segments = [cot]
-            cot_segment_tokens = tokenizer.batch_encode_plus(cot_segments, add_special_tokens=False)['input_ids']
+
+            cot_segment_tokens = tokenizer.batch_encode_plus(
+                cot_segments, add_special_tokens=False
+            )['input_ids']
 
             segments = []
             segments.append(make_segment(bos + task_tokens + think, loss=False))
-            for segment in cot_segment_tokens[:-1]:
-                segments.append(make_segment(bos + segment + think, loss=True))
-            segments.append(make_segment(bos + cot_segment_tokens[-1] + ans, loss=True))
 
-            segments.append(make_segment(bos + labels_tokens + eos, loss=True))
-            segments_batch.append(segments)
+            # 10========== (В1) Masked latent segment training ==========
+            if mode == 'masked_latent':
+                for segment in cot_segment_tokens[:-1]:
+                    if random.random() < 0.5:
+                        segments.append(make_segment(bos + latent_tokens + think, loss=True))
+                    else:
+                        segments.append(make_segment(bos + segment + think, loss=True))
+
+                if random.random() < 0.5:
+                    last_segment = latent_tokens
+                else:
+                    last_segment = cot_segment_tokens[-1]
+
+                segments.append(make_segment(bos + last_segment + ans, loss=True))
+                segments.append(make_segment(bos + labels_tokens + eos, loss=True))
+                segments_batch.append(segments)
+                continue
+
+            # 2========== 2 stage (token-latent) reasoning ==========
+            elif mode == '2stage_token_latent':
+                for segment in cot_segment_tokens[:-1]:
+                    segments.append(make_segment(bos + segment + think, loss=True))       # Token r
+                    segments.append(make_segment(bos + latent_tokens + think, loss=False)) # Latent r
+                segments.append(make_segment(bos + cot_segment_tokens[-1] + ans, loss=True))
+                segments.append(make_segment(bos + labels_tokens + eos, loss=True))
+                segments_batch.append(segments)
+                continue
+
+            # 3========== 2 stage (token-latent) reasoning ==========
+            elif mode == '2stage_token_latent_empty':
+                for segment in cot_segment_tokens[:-1]:
+                    segments.append(make_segment(bos + segment + think, loss=True))       # Token r
+                    segments.append(make_segment(bos + think, loss=False)) # Latent r
+                segments.append(make_segment(bos + cot_segment_tokens[-1] + ans, loss=True))
+                segments.append(make_segment(bos + labels_tokens + eos, loss=True))
+                segments_batch.append(segments)
+                continue
+
+            # 5========== 2 stage ablation (latent before token) ==========
+            elif mode == '2stage_latent_token':
+                for segment in cot_segment_tokens[:-1]:
+                    segments.append(make_segment(bos + latent_tokens + think, loss=False)) # Latent r
+                    segments.append(make_segment(bos + segment + think, loss=True))       # token r
+                segments.append(make_segment(bos + cot_segment_tokens[-1] + ans, loss=True))
+                segments.append(make_segment(bos + labels_tokens + eos, loss=True))
+                segments_batch.append(segments)
+                continue
+
+            # 1========== single reasoning ==========
+            elif mode == 'single_reasoning':
+                all_cot = []
+                for segment in cot_segment_tokens[:-1]:
+                    all_cot += segment + think
+                all_cot += cot_segment_tokens[-1]
+                segments.append(make_segment(bos + all_cot + ans, loss=True))
+                segments.append(make_segment(bos + labels_tokens + eos, loss=True))
+                segments_batch.append(segments)
+                continue
+
+            # 0========== reasoning with overlap ==========
+            elif mode == 'overlap_reasoning':
+                for i, segment in enumerate(cot_segment_tokens[1: -1]):
+                    segments.append(make_segment(bos + cot_segment_tokens[i-1] + think + segment + think, loss=True))
+                if len(cot_segment_tokens) >=2:
+                    segments.append(make_segment(bos + cot_segment_tokens[-2] + think + cot_segment_tokens[-1] + ans, loss=True))
+                segments.append(make_segment(bos + cot_segment_tokens[-1] + ans + labels_tokens + eos, loss=True))
+                segments_batch.append(segments)
+                continue
+            elif mode == 'base':
+                # ========== старый код ==========
+                for segment in cot_segment_tokens[:-1]:
+                    segments.append(make_segment(bos + segment + think, loss=True))
+                segments.append(make_segment(bos + cot_segment_tokens[-1] + ans, loss=True))
+                segments.append(make_segment(bos + labels_tokens + eos, loss=True))
+                segments_batch.append(segments)
+            else:
+                raise NotImplementedError('Mode name not found: ', mode)
 
         # if some samples have less segments than others, we pad them with empty segments
         num_segments = max(len(segments) for segments in segments_batch)
@@ -293,12 +382,14 @@ if __name__ == '__main__':
             labels = pad_sequence(labels, batch_first=True, padding_value=-100)
             labels_mask = pad_sequence(labels_mask, batch_first=True, padding_value=False)
 
-            batch_segment = {'input_ids': input_ids,
-                             'attention_mask': attention_mask,
-                             'labels_mask': labels_mask,
-                             'labels': labels
-                             }
+            batch_segment = {
+                'input_ids': input_ids,
+                'attention_mask': attention_mask,
+                'labels_mask': labels_mask,
+                'labels': labels
+            }
             batch_segments.append(batch_segment)
+
         full_labels = torch.cat([s['labels'] for s in batch_segments], dim=1)
         return {"segments": batch_segments, 'labels': full_labels}
 
@@ -363,7 +454,6 @@ if __name__ == '__main__':
         cpt = torch.load(backbone_cpt, map_location='cpu')
         model.load_state_dict(cpt['model_state_dict'], strict=True)
         logger.info(f'Loaded baseline state dict from: {args.backbone_cpt}')
-    
     # Pass memory settings to pretrained model
     if args.num_mem_tokens is not None:
         memory_cell_cls = get_cls_by_name(args.memory_cell_cls)
@@ -383,19 +473,16 @@ if __name__ == '__main__':
             mem_cell_args['layers_attr'] = args.layers_attr
         if args.attend_to_previous_input:
             mem_cell_args['attend_to_previous_input'] = args.attend_to_previous_input
-        
         cell = memory_cell_cls(**mem_cell_args)
-        model = recurrent_wrapper_cls(
-            cell,
-            segment_size=args.segment_size,
-            max_n_segments=args.max_n_segments,
-            vary_n_segments=args.vary_n_segments,
-            k2=args.k2,
-            attend_to_previous_input=args.attend_to_previous_input,
-            return_all_logits=False,
-            answer_loss_weight=args.answer_loss_weight
-        )
-        
+        model = recurrent_wrapper_cls(cell,
+                                      segment_size=args.segment_size,
+                                      max_n_segments=args.max_n_segments,
+                                      vary_n_segments=args.vary_n_segments,
+                                      k2=args.k2,
+                                      attend_to_previous_input=args.attend_to_previous_input,
+                                      return_all_logits=False,
+                                      answer_loss_weight=args.answer_loss_weight
+                                      )
         # load cpt of rmt
         if args.model_cpt:
             if "safetensors" in args.model_cpt:
@@ -415,7 +502,6 @@ if __name__ == '__main__':
                 model.load_state_dict(cpt, strict=False)
             logger.info(f'Loaded RMT state dict from: {args.model_cpt}')
             logger.info(f'Trainable parameters: {[n for n, p in model.named_parameters() if p.requires_grad]}')
-    
     if args.add_lora_to_armt:
         peft_config = LoraConfig(
             task_type=TaskType.CAUSAL_LM,
@@ -429,7 +515,6 @@ if __name__ == '__main__':
         logger.info('Added LoRA, trainable parameters with LoRA only:')
         model.memory_cell.model.print_trainable_parameters()
         # print(model)
-    
     if args.freeze_model_weights:
         for n, p in model.named_parameters():
             if 'memory' not in n and 'lora' not in n and 'adapter' not in n:
@@ -438,7 +523,6 @@ if __name__ == '__main__':
                 p.requires_grad = True
         logger.info('Frozen model weights')
         logger.info(f'Remaining parameters: {[n for n, p in model.named_parameters() if p.requires_grad]}')
-    
     if args.tune_only_memory:
         for n, p in model.named_parameters():
             if 'memory_cell.memory' not in n:
@@ -447,7 +531,6 @@ if __name__ == '__main__':
                 p.requires_grad = True
         logger.info('Frozen model weights')
         logger.info(f'Remaining parameters: {[n for n, p in model.named_parameters() if p.requires_grad]}')
-    
     if args.tune_only_armt:
         for n, p in model.named_parameters():
             if 'memory_cell.memory' not in n and 'W_mq' not in n \
