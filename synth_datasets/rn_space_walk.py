@@ -57,5 +57,5 @@ def save_to_huggingface(tasks, answers, dataset_name, hf_token):
 
 if __name__ == "__main__":
     # Example usage:
-    save_to_huggingface(tasks, answers, 'alexlegeartis/riw', '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')
+    save_to_huggingface(tasks, answers, 'alexlegeartis/riw', 'token')
     pass

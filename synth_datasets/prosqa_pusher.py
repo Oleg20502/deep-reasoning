@@ -17,4 +17,4 @@ ds_dict = DatasetDict({"train": ds})
 # Push to HuggingFace Hub
 # Replace with your actual dataset name and token
 # ds_dict.push_to_hub("your-username/your-dataset-name", token="your_hf_token")
-ds_dict.push_to_hub('alexlegeartis/prosqa', token='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')
+ds_dict.push_to_hub('alexlegeartis/prosqa', token='token')
