@@ -53,7 +53,7 @@ def save_to_huggingface(tasks, answers, dataset_name, hf_token):
     data_dict = {'task': tasks, 'answer': answers}
     ds = datasets.Dataset.from_dict(data_dict)
     ds_dict = datasets.DatasetDict({'train': ds})
-    ds_dict.push_to_hub(dataset_name, token=hf_token)
+    # ds_dict.push_to_hub(dataset_name, token=hf_token)
 
 if __name__ == "__main__":
     # Example usage:
