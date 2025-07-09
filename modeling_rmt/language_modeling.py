@@ -28,28 +28,34 @@ class MemoryCell(torch.nn.Module):
         if memory_state is None:
             memory_state = self.set_memory(input_ids.shape)
 
-        seg_kwargs = self.process_input(input_ids, memory_state, **kwargs)
+        seg_kwargs = self.process_input(input_ids, memory_state, write_mem=True, **kwargs)
         out = self.model(**seg_kwargs)
         out, new_memory_state = self.process_output(out, **kwargs)
 
         return out, new_memory_state
 
-    def generate(self, input_ids, memory_state, attention_mask, **generate_kwargs):
+    def generate(self, input_ids, memory_state, attention_mask=None, **generate_kwargs):
         if memory_state is None:
             memory_state = self.set_memory(input_ids.shape)
 
-        seg_kwargs = self.process_input(input_ids, memory_state, attention_mask=attention_mask)
-        out = self.model.generate(inputs_embeds=seg_kwargs['inputs_embeds'],
-                                  attention_mask=seg_kwargs['attention_mask'], **generate_kwargs)
+        seg_kwargs = self.process_input(input_ids, memory_state, attention_mask=attention_mask, write_mem=False)
+        out = self.model.generate(inputs_embeds=seg_kwargs['inputs_embeds'], attention_mask=seg_kwargs['attention_mask'], **generate_kwargs)
         return out
 
-    def process_input(self, input_ids, memory_state, **kwargs):
+    def process_input(self, input_ids, memory_state, write_mem, **kwargs):
         seg_kwargs = dict(**kwargs)
 
         inputs_embeds = kwargs.get('inputs_embeds')
         if inputs_embeds is None:
             inputs_embeds = self.model.get_input_embeddings()(input_ids)
-        inputs_embeds = torch.cat([memory_state, inputs_embeds, memory_state], dim=1)
+        else:
+            raise ValueError("inputs_embeds is not supported for memory cells") # test "if"
+
+        if self.num_mem_tokens > 0:
+            if write_mem:
+                inputs_embeds = torch.cat([memory_state, inputs_embeds, memory_state], dim=1)
+            else:
+                inputs_embeds = torch.cat([memory_state, inputs_embeds], dim=1)
 
         seg_kwargs['input_ids'] = None
         seg_kwargs['inputs_embeds'] = inputs_embeds
@@ -63,7 +69,7 @@ class MemoryCell(torch.nn.Module):
             return attention_mask
         else:
             mask = torch.ones(*shape[:2], dtype=torch.int64).to(attention_mask.device)
-            mask[:, self.num_mem_tokens:-self.num_mem_tokens] = attention_mask
+            mask[:, self.num_mem_tokens: self.num_mem_tokens + attention_mask.shape[1]] = attention_mask
             return mask
 
     def process_output(self, model_outputs, **kwargs):
@@ -99,7 +105,7 @@ class RecurrentWrapper(torch.nn.Module):
         for seg_num, segment in enumerate(segmented):
             cell_out, memory_state = self.memory_cell(**segment, memory_state=memory_state, output_hidden_states=True)
             cell_outputs.append(cell_out)
-            self.manage_gradients(memory_state, seg_num)
+            memory_state = self.manage_gradients(memory_state, seg_num)
 
         out = self.process_outputs(cell_outputs, labels=labels,
                                    labels_mask=labels_mask,
@@ -107,7 +113,7 @@ class RecurrentWrapper(torch.nn.Module):
                                    output_hidden_states=output_hidden_states)
         return out
 
-    def generate(self, input_ids, attention_mask, **generate_kwargs):
+    def generate(self, input_ids, attention_mask=None, **generate_kwargs):
         memory_state = None
         segmented = self.segment(input_ids=input_ids, attention_mask=attention_mask)
 
@@ -181,17 +187,22 @@ class RecurrentWrapper(torch.nn.Module):
             segment_keys.append('hidden_states')
             out['hidden_states'] = full_hidden_states
 
-        for seg_num, o in enumerate(cell_outputs):
-            for key, value in o.items():
-                if any([sk in key for sk in segment_keys]):
-                    out[f'{key}_{seg_num}'] = value
+        # for seg_num, o in enumerate(cell_outputs):
+        #     for key, value in o.items():
+        #         if any([sk in key for sk in segment_keys]):
+        #             out[f'{key}_{seg_num}'] = value
 
         return out
 
     def manage_gradients(self, memory_state, seg_num):
         k2, max_n_segments = self.rmt_config.get('k2'), self.rmt_config.get('max_n_segments')
-        if seg_num == 0 or k2 in {-1, None} or seg_num + k2 > max_n_segments:
-            return True
+        if seg_num == 0 \
+            or k2 in {-1, None} \
+                or seg_num + k2 > max_n_segments:
+            return memory_state
 
         memory_state = memory_state.detach()
-        return False
+        return memory_state
+    
+    def gradient_checkpointing_enable(self, *args, **kwargs):
+        self.memory_cell.model.gradient_checkpointing_enable(*args, **kwargs)

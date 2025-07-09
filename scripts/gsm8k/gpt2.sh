@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 set -e
-cd ../../
 
-NP=1
+SCRIPT_DIR=/home/user33/kashurin/deep-reasoning
+RUNS_DIR=/home/user33/kashurin/runs
+
+cd $SCRIPT_DIR
+
 CUBLAS_WORKSPACE_CONFIG=:4096:2
 CUDA_LAUNCH_BLOCKING=1
 
@@ -10,56 +13,57 @@ MODEL_TYPE=decoder
 MEMORY_CELL=modeling_amt.language_modeling:AssociativeMemoryCell
 RECURRENT_WRAPPER=modeling_amt.language_modeling:AssociativeRecurrentWrapper
 BACKBONE_CLS=transformers:AutoModelForCausalLM
-TASK_NAME=4_by_4_mult
-ITERS=250000
-TBS=64
-INPUT_SIZE=1024
+
+export CUDA_VISIBLE_DEVICES="2,3"
+NP=2
+TASK_NAME=gsm8k
+N_EPOCHS=20
+GRADIENT_ACC_STEP=8   # should be 8
+BS=32
+INPUT_SEQ_LEN=512
+MODEL_ID=gpt2
+MODEL_NAME=GPT2
+SCHEDULER=constant
+
+ACCEL_CONFIG="${SCRIPT_DIR}/accel_configs/accelerate_fp32_stage2.yaml"
+MAIN_SCRIPT="${SCRIPT_DIR}/run_finetuning_reasoning-v2.py"
 
 for N in 1; do
-    MODEL_NAME=gpt2
-    SEGMENT_ORDERING=regular
-    MAX_N_SEGMENTS=1
-    BS=32
-    SCHEDULER=linear
-    INPUT_SEQ_LEN=$((INPUT_SIZE))
-
-    for LR in 1e-04; do
-        GRADIENT_ACC_STEP=$((TBS/(BS*NP)))
-        ACCEL_CONFIG="/workspace-SR006.nfs2/bulatov/rmt/reasoning/deep-reasoning/accel_configs/accelerate_bf16.yaml"
-        MAIN_SCRIPT="/workspace-SR006.nfs2/bulatov/rmt/reasoning/deep-reasoning/run_finetuning_reasoning_rmt.py"
-
+    for LR in 3e-04; do
         echo "RUNNING: TASK_NAME SRC_LEN MODEL_NAME MODEL_CLS N_SEG MEMORY_SIZE INPUT_SEQ_LEN LR N"
         echo "RUNNING: $TASK_NAME $SRC_LEN $MODEL_NAME $MODEL_CLS $MAX_N_SEGMENTS $MEMORY_SIZE $INPUT_SEQ_LEN $LR $N $ITERS $D_MEM"
 
         accelerate launch --num_processes $NP --config_file $ACCEL_CONFIG $MAIN_SCRIPT \
         --task_name $TASK_NAME \
-        --dataset_name "booydar/multiplication_4x4" \
-        --output_dir /workspace-SR006.nfs2/bulatov/rmt/runs/${TASK_NAME}/${MODEL_NAME}/SEGM_${MAX_N_SEGMENTS}x${INPUT_SIZE}_${INPUT_SEQ_LEN}_LR${LR} \
-        --from_pretrained $MODEL_NAME \
+        --dataset_name "booydar/gsm8k" \
+        --output_dir ${RUNS_DIR}/${TASK_NAME}/TR_${MODEL_NAME}/L${INPUT_SEQ_LEN}_BS${BS}_LR${LR}-sft \
+        --from_pretrained $MODEL_ID \
         --model_type $MODEL_TYPE \
-        --memory_cell_cls $MEMORY_CELL \
-        --recurrent_wrapper_cls $RECURRENT_WRAPPER \
         --model_cls $BACKBONE_CLS \
         --sample_size $INPUT_SEQ_LEN \
-        --segment_size $INPUT_SIZE \
-        --max_n_segments $MAX_N_SEGMENTS \
-        --per_device_train_batch_size $BS --gradient_accumulation_steps $GRADIENT_ACC_STEP \
-        --max_steps $ITERS \
+        --per_device_train_batch_size $BS \
+        --per_device_eval_batch_size 8 \
+        --gradient_accumulation_steps $GRADIENT_ACC_STEP \
+        --num_train_epochs $N_EPOCHS \
         --layers_attr base_model.base_model.layers \
         --metric_for_best_model "eval_loss" \
         --greater_is_better False \
         --save_total_limit 1 \
-        --k1 -1 --k2 -1 \
         --optimizer AdamW --weight_decay 0.001 \
-        --learning_rate ${LR} --lr_scheduler_type $SCHEDULER --warmup_steps 3000 \
-        --data_n_workers 2 \
-        --logging_steps 50 --eval_steps 250 --save_steps 500 \
+        --learning_rate ${LR} \
+        --lr_scheduler_type $SCHEDULER \
+        --warmup_steps 500 \
+        --data_n_workers 4 \
+        --logging_steps 10 --eval_steps 50 --save_steps 50 \
+        --eval_strategy steps \
+        --eval_accumulation_steps 8 \
         --show_valid_examples 0 \
-        --early_stopping_patience 75 \
+        --early_stopping_patience 15 \
         --seed $((N+42)) \
         --max_grad_norm 1.0 \
         --mask_non_completion \
-        --report_to tensorboard
+        --report_to wandb \
+        --log_level info
     done
 done
 

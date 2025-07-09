@@ -7,6 +7,8 @@ import numpy as np
 import datasets
 from trl import SFTTrainer, SFTConfig
 from transformers import EarlyStoppingCallback, set_seed
+from torch.optim.lr_scheduler import LambdaLR
+from torch.optim import AdamW
 # from lm_experiments_tools.dataset_preprocessing import load_and_preprocess_task, combine_datasets
 # from lm_experiments_tools.instruction_utils import mask_non_completion, mask_non_completion_multi
 
@@ -154,6 +156,8 @@ parser.add_argument('--warmup_init', action='store_true', default=False,
                     help='Adafactor warmup_init (default: False)')
 parser.add_argument('--early_stopping_patience', type=int, default=-1,
                     help='Early stopping tolerance')
+parser.add_argument('--min_lr', type=float, default=0,
+                    help='Minimum learning rate for the scheduler')
 
 # LoRA args
 parser.add_argument('--use_lora', action='store_true', default=False, help='')
@@ -240,6 +244,10 @@ if __name__ == '__main__':
             cot_segments = split_cot(cot, by=delim)
             cot_segment_tokens = tokenizer.batch_encode_plus(cot_segments, add_special_tokens=False)['input_ids']
 
+            # latent_reasoning_segment = tokenizer.batch_encode_plus(
+            #     [reasoning_token]*text_seq_len, add_special_tokens=False
+            # )['input_ids']
+
             segments = []
             segments.append(make_segment(task_tokens + think, loss=False))
             for segment in cot_segment_tokens[:-1]:
@@ -294,7 +302,7 @@ if __name__ == '__main__':
         model = model_cls(config=model_cfg)
 
         logger.info(f'Loading pretrained model: {args.from_pretrained}')
-        base_model = model_cls.from_pretrained(args.from_pretrained, use_safetensors=False)
+        base_model = model_cls.from_pretrained(args.from_pretrained)
 
         model.load_state_dict(base_model.state_dict(), strict=False)
         del base_model
@@ -312,7 +320,7 @@ if __name__ == '__main__':
                                                   torch_dtype=torch.bfloat16,
                                                   trust_remote_code=True)
             else:
-                model = model_cls.from_pretrained(args.from_pretrained, use_safetensors=False)
+                model = model_cls.from_pretrained(args.from_pretrained)
     if args.use_lora:
         peft_config = LoraConfig(
             task_type=TaskType.CAUSAL_LM,
@@ -350,14 +358,16 @@ if __name__ == '__main__':
         if args.attend_to_previous_input:
             mem_cell_args['attend_to_previous_input'] = args.attend_to_previous_input
         cell = memory_cell_cls(**mem_cell_args)
-        model = recurrent_wrapper_cls(cell,
-                                      segment_size=args.segment_size,
-                                      max_n_segments=args.max_n_segments,
-                                      vary_n_segments=args.vary_n_segments,
-                                      k2=args.k2,
-                                      attend_to_previous_input=args.attend_to_previous_input,
-                                      return_all_logits=False,
-                                      )
+        model = recurrent_wrapper_cls(
+            cell,
+            segment_size=args.segment_size,
+            max_n_segments=args.max_n_segments,
+            vary_n_segments=args.vary_n_segments,
+            k2=args.k2,
+            attend_to_previous_input=args.attend_to_previous_input,
+            return_all_logits=False,
+        )
+        
         # load cpt of rmt
         if args.model_cpt:
             if "safetensors" in args.model_cpt:
@@ -430,7 +440,7 @@ if __name__ == '__main__':
     training_args_dict['save_safetensors'] = False
     training_args_dict['bf16'] = True
     training_args_dict['label_names'] = ['labels']
-    training_args_dict['evaluation_strategy'] = 'steps'
+    training_args_dict['eval_strategy'] = 'steps'
     if training_args_dict.get('per_device_train_batch_size') == 1:
         training_args_dict['per_device_eval_batch_size'] = training_args_dict.get('per_device_train_batch_size')
     else:
@@ -492,21 +502,24 @@ if __name__ == '__main__':
 
         return {'accuracy_cot': acc_cot, 'accuracy_ans': acc_ans}
 
-    # def compute_metrics(eval_pred):
-    #     logits, labels = eval_pred
-    #     loss_fct = torch.nn.CrossEntropyLoss()
-    #     loss = loss_fct(torch.tensor(logits), torch.tensor(labels)).item()
-    #     print('\n\n\n\n\nI FUCHING GIVE U EVAL LOSS')
-    #     return {"eval_loss": loss, 'loss': eval_loss}
+    def lr_lambda(current_step):
+        if current_step < training_args.warmup_steps:
+            return current_step / training_args.warmup_steps
+        decay_factor = (training_args.max_steps - current_step) / (training_args.max_steps - training_args.warmup_steps)
+        return max(args.min_lr / training_args.learning_rate, decay_factor)
+
+    optimizer = AdamW(model.parameters(), lr=training_args.learning_rate)
+    scheduler = LambdaLR(optimizer, lr_lambda)
 
     trainer = SFTTrainer(
         model=model,
         args=training_args,
         train_dataset=train_dataset,
         eval_dataset=valid_dataset,
-        tokenizer=tokenizer,
+        processing_class=tokenizer,
         data_collator=collate_fn,
-        # compute_metrics=compute_metrics
+        compute_metrics=compute_accuracy,
+        optimizers=(optimizer, scheduler)
     )
     logger.info(f"Trainer Gradient Checkpointing Enabled: {trainer.args.gradient_checkpointing}")
     if args.early_stopping_patience != -1:
