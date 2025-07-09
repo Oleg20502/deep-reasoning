@@ -1,0 +1,855 @@
+{
+  "example1": {
+    "test_example": {
+      "question": "Rex is a tumpus. Sam is a wumpus. Every numpus is a lempus. Every impus is a brimpus. Every yumpus is a jompus. Every yumpus is a dumpus. Every tumpus is a shumpus. Every yumpus is a numpus. Every jompus is a sterpus. Every rompus is a jompus. Every wumpus is a rompus. Every gorpus is a brimpus. Every dumpus is a rompus. Every jompus is a brimpus. Alex is a zumpus. Every vumpus is a impus. Every lorpus is a brimpus. Every vumpus is a lorpus. Every jompus is a gorpus. Alex is a tumpus. Every dumpus is a impus. Every rompus is a vumpus. Every dumpus is a numpus. Every yumpus is a rompus. Every impus is a jompus. Every numpus is a jompus. Every rompus is a impus. Every dumpus is a jompus. Every wumpus is a yumpus. Every zumpus is a tumpus. Every zumpus is a grimpus. Is Sam a shumpus or sterpus?",
+      "chain_of_thought": [
+        "Sam is a wumpus.",
+        "Every wumpus is a rompus.",
+        "Every rompus is a jompus.",
+        "Every jompus is a sterpus."
+      ],
+      "answer": "sterpus"
+    }
+  },
+  "example2": {
+    "test_example": {
+      "question": "Every numpus is a gorpus. Every shumpus is a sterpus. Every zumpus is a dumpus. Fae is a dumpus. Every wumpus is a zumpus. Every sterpus is a grimpus. Fae is a lorpus. Every tumpus is a lorpus. Every tumpus is a impus. Every impus is a lorpus. Every impus is a jompus. Every numpus is a lempus. Sally is a zumpus. Every yumpus is a dumpus. Every wumpus is a tumpus. Every wumpus is a dumpus. Fae is a wumpus. Every yumpus is a vumpus. Fae is a yumpus. Every rompus is a lorpus. Sam is a gorpus. Every wumpus is a vumpus. Every wumpus is a yumpus. Every wumpus is a rompus. Every yumpus is a zumpus. Every yumpus is a jompus. Sam is a numpus. Wren is a gorpus. Every zumpus is a shumpus. Every numpus is a tumpus. Every dumpus is a rompus. Every rompus is a jompus. Every numpus is a sterpus. Every numpus is a shumpus. Every impus is a grimpus. Is Fae a gorpus or grimpus?",
+      "chain_of_thought": [
+        "Fae is a wumpus.",
+        "Every wumpus is a tumpus.",
+        "Every tumpus is a impus.",
+        "Every impus is a grimpus."
+      ],
+      "answer": "grimpus"
+    }
+  },
+  "example3": {
+    "test_example": {
+      "question": "Every zumpus is a numpus. Every tumpus is a lorpus. Every yumpus is a dumpus. Every tumpus is a impus. Every dumpus is a vumpus. Every wumpus is a dumpus. Alex is a impus. Alex is a yumpus. Every wumpus is a lempus. Every tumpus is a jompus. Alex is a wumpus. Every gorpus is a shumpus. Every vumpus is a grimpus. Every jompus is a grimpus. Sally is a wumpus. Every impus is a sterpus. Every zumpus is a impus. Stella is a rompus. Stella is a shumpus. Every vumpus is a lorpus. Stella is a zumpus. Every sterpus is a grimpus. Every zumpus is a gorpus. Every numpus is a tumpus. Every wumpus is a yumpus. Is Sally a rompus or lempus?",
+      "chain_of_thought": [
+        "Sally is a wumpus.",
+        "Every wumpus is a lempus."
+      ],
+      "answer": "lempus"
+    }
+  },
+  "example4": {
+    "test_example": {
+      "question": "Every gorpus is a grimpus. Alex is a impus. Max is a dumpus. Max is a rompus. Max is a vumpus. Every gorpus is a lorpus. Every dumpus is a jompus. Every lempus is a grimpus. Sam is a shumpus. Alex is a lorpus. Every yumpus is a tumpus. Every dumpus is a impus. Every zumpus is a tumpus. Every yumpus is a rompus. Alex is a sterpus. Sam is a wumpus. Every yumpus is a zumpus. Every dumpus is a vumpus. Every wumpus is a shumpus. Every vumpus is a impus. Every sterpus is a grimpus. Every gorpus is a sterpus. Every zumpus is a shumpus. Sam is a zumpus. Every wumpus is a tumpus. Every wumpus is a zumpus. Sam is a yumpus. Fae is a jompus. Fae is a lorpus. Every jompus is a wumpus. Sam is a lorpus. Every numpus is a tumpus. Every zumpus is a lempus. Alex is a vumpus. Every vumpus is a brimpus. Every rompus is a grimpus. Every tumpus is a gorpus. Every zumpus is a numpus. Is Max a shumpus or brimpus?",
+      "chain_of_thought": [
+        "Max is a vumpus.",
+        "Every vumpus is a brimpus."
+      ],
+      "answer": "brimpus"
+    }
+  },
+  "example5": {
+    "test_example": {
+      "question": "Sally is a zumpus. Every numpus is a tumpus. Every dumpus is a sterpus. Every wumpus is a dumpus. Polly is a vumpus. Rex is a lempus. Every dumpus is a numpus. Every numpus is a impus. Sally is a rompus. Every zumpus is a rompus. Every zumpus is a vumpus. Every gorpus is a shumpus. Every yumpus is a shumpus. Rex is a jompus. Every rompus is a numpus. Every wumpus is a yumpus. Every dumpus is a rompus. Every dumpus is a tumpus. Sally is a yumpus. Polly is a lempus. Every dumpus is a impus. Every gorpus is a grimpus. Stella is a wumpus. Every jompus is a gorpus. Fae is a jompus. Is Stella a impus or lempus?",
+      "chain_of_thought": [
+        "Stella is a wumpus.",
+        "Every wumpus is a dumpus.",
+        "Every dumpus is a impus."
+      ],
+      "answer": "impus"
+    }
+  },
+  "example6": {
+    "test_example": {
+      "question": "Stella is a gorpus. Max is a yumpus. Fae is a impus. Max is a zumpus. Stella is a dumpus. Max is a rompus. Every vumpus is a gorpus. Every zumpus is a gorpus. Every zumpus is a dumpus. Fae is a shumpus. Every numpus is a shumpus. Sally is a dumpus. Sally is a wumpus. Polly is a numpus. Every tumpus is a gorpus. Every wumpus is a shumpus. Rex is a tumpus. Polly is a yumpus. Sally is a zumpus. Rex is a dumpus. Stella is a tumpus. Every tumpus is a jompus. Max is a vumpus. Polly is a wumpus. Every tumpus is a lempus. Every vumpus is a shumpus. Every rompus is a jompus. Is Sally a gorpus or yumpus?",
+      "chain_of_thought": [],
+      "answer": "gorpus"
+    }
+  },
+  "example7": {
+    "test_example": {
+      "question": "Every numpus is a jompus. Every rompus is a impus. Every rompus is a vumpus. Every jompus is a lempus. Every shumpus is a wumpus. Every tumpus is a impus. Every gorpus is a shumpus. Every yumpus is a gorpus. Every vumpus is a sterpus. Max is a rompus. Every rompus is a lorpus. Every numpus is a zumpus. Every zumpus is a grimpus. Max is a tumpus. Every jompus is a yumpus. Every yumpus is a numpus. Every yumpus is a brimpus. Every zumpus is a numpus. Every jompus is a wumpus. Every jompus is a gorpus. Every wumpus is a zumpus. Wren is a zumpus. Wren is a wumpus. Wren is a lempus. Every zumpus is a dumpus. Every tumpus is a vumpus. Every wumpus is a dumpus. Max is a wumpus. Every brimpus is a yumpus. Every gorpus is a grimpus. Wren is a yumpus. Is Wren a impus or grimpus?",
+      "chain_of_thought": [
+        "Wren is a zumpus.",
+        "Every zumpus is a grimpus."
+      ],
+      "answer": "grimpus"
+    }
+  },
+  "example8": {
+    "test_example": {
+      "question": "Every vumpus is a brimpus. Fae is a tumpus. Every numpus is a brimpus. Fae is a rompus. Stella is a numpus. Every rompus is a tumpus. Every impus is a jompus. Fae is a wumpus. Stella is a dumpus. Stella is a yumpus. Every numpus is a vumpus. Every dumpus is a numpus. Every wumpus is a shumpus. Stella is a sterpus. Every zumpus is a gorpus. Every dumpus is a sterpus. Fae is a shumpus. Every yumpus is a zumpus. Every wumpus is a rompus. Every sterpus is a lorpus. Every zumpus is a jompus. Every dumpus is a vumpus. Sam is a shumpus. Every lorpus is a wumpus. Every vumpus is a gorpus. Every wumpus is a yumpus. Stella is a impus. Every sterpus is a grimpus. Stella is a zumpus. Every wumpus is a lempus. Is Fae a shumpus or brimpus?",
+      "chain_of_thought": [
+        "Fae is a shumpus."
+      ],
+      "answer": "shumpus"
+    }
+  },
+  "example9": {
+    "test_example": {
+      "question": "Every wumpus is a yumpus. Every impus is a jompus. Every gorpus is a brimpus. Max is a impus. Sally is a numpus. Every rompus is a grimpus. Every dumpus is a vumpus. Sally is a wumpus. Every rompus is a gorpus. Every jompus is a shumpus. Fae is a impus. Every vumpus is a jompus. Every rompus is a jompus. Every yumpus is a wumpus. Max is a zumpus. Every yumpus is a tumpus. Every grimpus is a wumpus. Every shumpus is a lempus. Every tumpus is a wumpus. Every dumpus is a jompus. Every dumpus is a sterpus. Sam is a lorpus. Every dumpus is a rompus. Max is a wumpus. Wren is a dumpus. Every tumpus is a lorpus. Max is a vumpus. Every lempus is a wumpus. Is Max a numpus or zumpus?",
+      "chain_of_thought": [
+        "Max is a zumpus."
+      ],
+      "answer": "zumpus"
+    }
+  },
+  "example10": {
+    "test_example": {
+      "question": "Max is a gorpus. Every tumpus is a vumpus. Every rompus is a numpus. Every zumpus is a rompus. Every zumpus is a dumpus. Every wumpus is a vumpus. Stella is a wumpus. Every zumpus is a numpus. Max is a numpus. Polly is a lorpus. Rex is a shumpus. Polly is a impus. Polly is a vumpus. Every wumpus is a dumpus. Polly is a numpus. Every yumpus is a sterpus. Every numpus is a gorpus. Every wumpus is a yumpus. Every numpus is a lorpus. Polly is a rompus. Max is a zumpus. Every dumpus is a tumpus. Every yumpus is a tumpus. Every gorpus is a grimpus. Every rompus is a impus. Max is a rompus. Every wumpus is a tumpus. Every tumpus is a jompus. Every grimpus is a lorpus. Stella is a yumpus. Max is a lempus. Is Stella a lorpus or sterpus?",
+      "chain_of_thought": [
+        "Stella is a yumpus.",
+        "Every yumpus is a sterpus."
+      ],
+      "answer": "sterpus"
+    }
+  },
+  "example11": {
+    "test_example": {
+      "question": "Stella is a yumpus. Every tumpus is a shumpus. Every yumpus is a jompus. Every jompus is a sterpus. Every dumpus is a lempus. Every shumpus is a grimpus. Max is a gorpus. Fae is a vumpus. Every wumpus is a yumpus. Every wumpus is a dumpus. Stella is a zumpus. Every zumpus is a jompus. Sally is a rompus. Fae is a lempus. Wren is a gorpus. Every vumpus is a lorpus. Wren is a numpus. Stella is a wumpus. Every vumpus is a shumpus. Every dumpus is a numpus. Stella is a impus. Fae is a tumpus. Is Sally a rompus or impus?",
+      "chain_of_thought": [
+        "Sally is a rompus."
+      ],
+      "answer": "rompus"
+    }
+  },
+  "example12": {
+    "test_example": {
+      "question": "Every yumpus is a rompus. Every tumpus is a gorpus. Every jompus is a lempus. Every gorpus is a lempus. Max is a yumpus. Every dumpus is a numpus. Every yumpus is a gorpus. Every rompus is a jompus. Every zumpus is a lorpus. Every impus is a gorpus. Every wumpus is a impus. Max is a tumpus. Every lempus is a lorpus. Every rompus is a impus. Every numpus is a vumpus. Every dumpus is a vumpus. Every shumpus is a sterpus. Every jompus is a lorpus. Every yumpus is a zumpus. Stella is a vumpus. Every yumpus is a tumpus. Every rompus is a lempus. Every zumpus is a impus. Wren is a shumpus. Polly is a impus. Every wumpus is a yumpus. Every sterpus is a grimpus. Max is a wumpus. Every wumpus is a gorpus. Polly is a dumpus. Every wumpus is a lempus. Every zumpus is a tumpus. Polly is a rompus. Every yumpus is a impus. Stella is a dumpus. Every grimpus is a brimpus. Is Stella a vumpus or lorpus?",
+      "chain_of_thought": [
+        "Stella is a vumpus."
+      ],
+      "answer": "vumpus"
+    }
+  },
+  "example13": {
+    "test_example": {
+      "question": "Every yumpus is a dumpus. Every wumpus is a dumpus. Fae is a lorpus. Every numpus is a gorpus. Rex is a lempus. Max is a shumpus. Every numpus is a impus. Every wumpus is a jompus. Max is a vumpus. Every yumpus is a vumpus. Every zumpus is a dumpus. Every shumpus is a lempus. Every yumpus is a rompus. Polly is a impus. Alex is a zumpus. Every sterpus is a grimpus. Alex is a wumpus. Every shumpus is a grimpus. Every yumpus is a jompus. Every yumpus is a tumpus. Every gorpus is a sterpus. Rex is a rompus. Every rompus is a jompus. Alex is a rompus. Every numpus is a grimpus. Max is a numpus. Fae is a impus. Polly is a lempus. Rex is a wumpus. Every gorpus is a shumpus. Alex is a yumpus. Is Rex a lempus or vumpus?",
+      "chain_of_thought": [
+        "Rex is a lempus."
+      ],
+      "answer": "lempus"
+    }
+  },
+  "example15": {
+    "test_example": {
+      "question": "Every tumpus is a shumpus. Every numpus is a lempus. Every wumpus is a zumpus. Max is a rompus. Max is a yumpus. Every numpus is a sterpus. Max is a jompus. Wren is a lempus. Every rompus is a tumpus. Every numpus is a impus. Every impus is a lempus. Every vumpus is a grimpus. Every dumpus is a impus. Every rompus is a vumpus. Every dumpus is a sterpus. Alex is a numpus. Every dumpus is a numpus. Every dumpus is a grimpus. Fae is a numpus. Max is a zumpus. Max is a wumpus. Every dumpus is a rompus. Rex is a tumpus. Fae is a rompus. Every impus is a gorpus. Every vumpus is a jompus. Every zumpus is a sterpus. Fae is a dumpus. Every yumpus is a tumpus. Every dumpus is a tumpus. Alex is a zumpus. Every gorpus is a shumpus. Every yumpus is a vumpus. Fae is a jompus. Alex is a wumpus. Every shumpus is a sterpus. Sally is a numpus. Every tumpus is a gorpus. Sam is a numpus. Is Alex a lempus or jompus?",
+      "chain_of_thought": [
+        "Alex is a numpus.",
+        "Every numpus is a lempus."
+      ],
+      "answer": "lempus"
+    }
+  },
+  "example16": {
+    "test_example": {
+      "question": "Every rompus is a shumpus. Fae is a wumpus. Every rompus is a jompus. Every dumpus is a rompus. Every sterpus is a grimpus. Stella is a rompus. Every dumpus is a tumpus. Rex is a zumpus. Rex is a rompus. Every yumpus is a grimpus. Rex is a impus. Every zumpus is a numpus. Every rompus is a tumpus. Every vumpus is a lorpus. Every zumpus is a gorpus. Every wumpus is a zumpus. Every numpus is a tumpus. Rex is a yumpus. Every yumpus is a zumpus. Every shumpus is a brimpus. Every gorpus is a lorpus. Every dumpus is a numpus. Every zumpus is a sterpus. Every numpus is a lempus. Wren is a rompus. Stella is a jompus. Every jompus is a grimpus. Every wumpus is a gorpus. Every wumpus is a yumpus. Every yumpus is a numpus. Every shumpus is a sterpus. Stella is a dumpus. Every wumpus is a vumpus. Is Fae a lorpus or brimpus?",
+      "chain_of_thought": [
+        "Fae is a wumpus.",
+        "Every wumpus is a vumpus.",
+        "Every vumpus is a lorpus."
+      ],
+      "answer": "lorpus"
+    }
+  },
+  "example17": {
+    "test_example": {
+      "question": "Every zumpus is a gorpus. Every yumpus is a zumpus. Every wumpus is a zumpus. Every zumpus is a tumpus. Every rompus is a shumpus. Polly is a wumpus. Every dumpus is a jompus. Every vumpus is a impus. Every rompus is a impus. Every numpus is a shumpus. Every jompus is a shumpus. Every wumpus is a dumpus. Every dumpus is a vumpus. Every jompus is a grimpus. Polly is a numpus. Every yumpus is a rompus. Stella is a gorpus. Every grimpus is a lorpus. Every tumpus is a sterpus. Polly is a yumpus. Every rompus is a lempus. Every dumpus is a impus. Polly is a tumpus. Every zumpus is a numpus. Every tumpus is a vumpus. Is Alex a Alex or Rex?",
+      "chain_of_thought": [],
+      "answer": "Alex"
+    }
+  },
+  "example18": {
+    "test_example": {
+      "question": "Every rompus is a impus. Every vumpus is a lempus. Fae is a lorpus. Fae is a numpus. Every numpus is a vumpus. Every wumpus is a zumpus. Max is a tumpus. Fae is a lempus. Fae is a jompus. Every wumpus is a jompus. Every rompus is a gorpus. Sally is a yumpus. Every sterpus is a grimpus. Every yumpus is a rompus. Every jompus is a lorpus. Every numpus is a grimpus. Every shumpus is a lorpus. Every zumpus is a lorpus. Fae is a tumpus. Every tumpus is a impus. Rex is a wumpus. Every zumpus is a shumpus. Every dumpus is a tumpus. Every shumpus is a lempus. Max is a dumpus. Every yumpus is a dumpus. Every shumpus is a sterpus. Is Rex a impus or grimpus?",
+      "chain_of_thought": [
+        "Rex is a wumpus.",
+        "Every wumpus is a zumpus.",
+        "Every zumpus is a shumpus.",
+        "Every shumpus is a sterpus.",
+        "Every sterpus is a grimpus."
+      ],
+      "answer": "grimpus"
+    }
+  },
+  "example19": {
+    "test_example": {
+      "question": "Fae is a shumpus. Every jompus is a lempus. Wren is a jompus. Every numpus is a lorpus. Every wumpus is a grimpus. Sam is a dumpus. Every vumpus is a sterpus. Every dumpus is a vumpus. Every vumpus is a gorpus. Every numpus is a shumpus. Sam is a yumpus. Every wumpus is a zumpus. Every gorpus is a grimpus. Every yumpus is a zumpus. Sam is a vumpus. Every wumpus is a numpus. Every numpus is a tumpus. Every wumpus is a tumpus. Every wumpus is a yumpus. Stella is a yumpus. Every tumpus is a jompus. Every jompus is a shumpus. Every zumpus is a grimpus. Every dumpus is a rompus. Every zumpus is a rompus. Stella is a wumpus. Every rompus is a lorpus. Every numpus is a impus. Is Rex a Rex or grimpus?",
+      "chain_of_thought": [],
+      "answer": "Rex"
+    }
+  },
+  "example20": {
+    "test_example": {
+      "question": "Alex is a rompus. Every dumpus is a numpus. Every rompus is a sterpus. Polly is a lempus. Polly is a numpus. Every tumpus is a lempus. Every jompus is a shumpus. Polly is a dumpus. Wren is a impus. Polly is a rompus. Every yumpus is a impus. Every jompus is a gorpus. Every wumpus is a rompus. Every zumpus is a dumpus. Every dumpus is a lempus. Polly is a zumpus. Alex is a gorpus. Every numpus is a tumpus. Alex is a yumpus. Every gorpus is a shumpus. Every zumpus is a tumpus. Alex is a wumpus. Every vumpus is a jompus. Every zumpus is a lempus. Every yumpus is a vumpus. Every dumpus is a tumpus. Every vumpus is a shumpus. Every dumpus is a rompus. Is Polly a lempus or impus?",
+      "chain_of_thought": [
+        "Polly is a lempus."
+      ],
+      "answer": "lempus"
+    }
+  },
+  "example21": {
+    "test_example": {
+      "question": "Fae is a dumpus. Every zumpus is a dumpus. Every vumpus is a lorpus. Every zumpus is a jompus. Every tumpus is a lorpus. Every wumpus is a zumpus. Sally is a dumpus. Every vumpus is a gorpus. Every dumpus is a rompus. Stella is a numpus. Every tumpus is a grimpus. Wren is a wumpus. Fae is a zumpus. Wren is a zumpus. Sam is a yumpus. Every dumpus is a impus. Sally is a jompus. Every impus is a jompus. Every vumpus is a brimpus. Fae is a gorpus. Every zumpus is a shumpus. Every dumpus is a jompus. Every jompus is a brimpus. Alex is a gorpus. Every impus is a lorpus. Fae is a vumpus. Every gorpus is a grimpus. Every numpus is a lempus. Every wumpus is a dumpus. Every rompus is a tumpus. Fae is a shumpus. Every gorpus is a sterpus. Every numpus is a gorpus. Is Sam a yumpus or brimpus?",
+      "chain_of_thought": [
+        "Sam is a yumpus."
+      ],
+      "answer": "yumpus"
+    }
+  },
+  "example23": {
+    "test_example": {
+      "question": "Every dumpus is a numpus. Max is a rompus. Alex is a yumpus. Max is a wumpus. Every zumpus is a dumpus. Every rompus is a grimpus. Every rompus is a gorpus. Every wumpus is a gorpus. Every wumpus is a yumpus. Wren is a tumpus. Every numpus is a vumpus. Every gorpus is a lorpus. Sam is a grimpus. Alex is a tumpus. Every lempus is a brimpus. Every jompus is a shumpus. Every wumpus is a grimpus. Every wumpus is a lorpus. Alex is a numpus. Every tumpus is a impus. Rex is a grimpus. Alex is a jompus. Every lempus is a sterpus. Every rompus is a numpus. Every dumpus is a tumpus. Every gorpus is a grimpus. Wren is a lorpus. Rex is a sterpus. Alex is a zumpus. Max is a yumpus. Every zumpus is a tumpus. Every lempus is a lorpus. Every wumpus is a rompus. Every gorpus is a lempus. Wren is a rompus. Is Max a impus or brimpus?",
+      "chain_of_thought": [
+        "Max is a wumpus.",
+        "Every wumpus is a gorpus.",
+        "Every gorpus is a lempus.",
+        "Every lempus is a brimpus."
+      ],
+      "answer": "brimpus"
+    }
+  },
+  "example25": {
+    "test_example": {
+      "question": "Polly is a numpus. Sam is a jompus. Stella is a gorpus. Every rompus is a impus. Every wumpus is a dumpus. Every numpus is a impus. Sam is a yumpus. Max is a wumpus. Every yumpus is a zumpus. Every dumpus is a jompus. Every numpus is a shumpus. Every rompus is a vumpus. Every zumpus is a vumpus. Every wumpus is a yumpus. Wren is a tumpus. Polly is a impus. Rex is a gorpus. Polly is a shumpus. Sam is a rompus. Polly is a vumpus. Is Sally a jompus or Sally?",
+      "chain_of_thought": [],
+      "answer": "Sally"
+    }
+  },
+  "example26": {
+    "test_example": {
+      "question": "Sally is a zumpus. Every impus is a jompus. Every jompus is a sterpus. Sam is a vumpus. Every jompus is a gorpus. Polly is a wumpus. Wren is a lempus. Polly is a impus. Every zumpus is a rompus. Every yumpus is a sterpus. Every zumpus is a tumpus. Every dumpus is a numpus. Sally is a wumpus. Every numpus is a shumpus. Every tumpus is a lempus. Sam is a tumpus. Every dumpus is a rompus. Every dumpus is a shumpus. Every zumpus is a numpus. Every tumpus is a vumpus. Every yumpus is a numpus. Sam is a dumpus. Sally is a grimpus. Every yumpus is a rompus. Fae is a gorpus. Polly is a yumpus. Is Polly a vumpus or gorpus?",
+      "chain_of_thought": [
+        "Polly is a impus.",
+        "Every impus is a jompus.",
+        "Every jompus is a gorpus."
+      ],
+      "answer": "gorpus"
+    }
+  },
+  "example27": {
+    "test_example": {
+      "question": "Every zumpus is a grimpus. Every gorpus is a lempus. Every zumpus is a jompus. Every yumpus is a zumpus. Polly is a rompus. Alex is a yumpus. Alex is a numpus. Every wumpus is a grimpus. Every rompus is a tumpus. Every vumpus is a sterpus. Alex is a shumpus. Every yumpus is a gorpus. Every wumpus is a dumpus. Sally is a numpus. Every yumpus is a jompus. Polly is a wumpus. Sally is a zumpus. Every vumpus is a impus. Polly is a dumpus. Every zumpus is a numpus. Max is a lorpus. Every yumpus is a numpus. Every tumpus is a grimpus. Sally is a yumpus. Alex is a zumpus. Every wumpus is a rompus. Polly is a vumpus. Every gorpus is a shumpus. Sally is a dumpus. Every numpus is a shumpus. Every tumpus is a vumpus. Every wumpus is a vumpus. Is Alex a shumpus or dumpus?",
+      "chain_of_thought": [
+        "Alex is a shumpus."
+      ],
+      "answer": "shumpus"
+    }
+  },
+  "example28": {
+    "test_example": {
+      "question": "Every rompus is a yumpus. Fae is a vumpus. Every yumpus is a shumpus. Every dumpus is a numpus. Every dumpus is a tumpus. Stella is a impus. Every zumpus is a dumpus. Every vumpus is a jompus. Every yumpus is a numpus. Rex is a rompus. Every impus is a wumpus. Rex is a zumpus. Every numpus is a shumpus. Fae is a yumpus. Every grimpus is a wumpus. Every wumpus is a dumpus. Every shumpus is a brimpus. Every wumpus is a shumpus. Every gorpus is a lempus. Stella is a rompus. Every wumpus is a lempus. Wren is a vumpus. Every dumpus is a rompus. Every gorpus is a brimpus. Every impus is a sterpus. Every sterpus is a grimpus. Every gorpus is a lorpus. Rex is a yumpus. Every wumpus is a yumpus. Rex is a wumpus. Every tumpus is a yumpus. Every tumpus is a gorpus. Every tumpus is a lorpus. Every lorpus is a brimpus. Is Fae a yumpus or jompus?",
+      "chain_of_thought": [
+        "Fae is a vumpus.",
+        "Every vumpus is a jompus."
+      ],
+      "answer": "jompus"
+    }
+  },
+  "example29": {
+    "test_example": {
+      "question": "Rex is a dumpus. Sam is a impus. Max is a zumpus. Every dumpus is a grimpus. Every rompus is a vumpus. Every dumpus is a rompus. Every wumpus is a lorpus. Max is a yumpus. Every gorpus is a brimpus. Every numpus is a grimpus. Every wumpus is a numpus. Every yumpus is a rompus. Sam is a lempus. Every tumpus is a jompus. Every yumpus is a tumpus. Stella is a zumpus. Every tumpus is a sterpus. Every numpus is a lorpus. Every numpus is a lempus. Every numpus is a gorpus. Every wumpus is a rompus. Max is a wumpus. Every zumpus is a rompus. Sally is a numpus. Rex is a wumpus. Every zumpus is a brimpus. Every zumpus is a lorpus. Rex is a yumpus. Every sterpus is a grimpus. Every jompus is a grimpus. Every zumpus is a vumpus. Every tumpus is a shumpus. Is Sam a lorpus or lempus?",
+      "chain_of_thought": [
+        "Sam is a lempus."
+      ],
+      "answer": "lempus"
+    }
+  },
+  "example30": {
+    "test_example": {
+      "question": "Polly is a gorpus. Every yumpus is a lorpus. Every tumpus is a jompus. Every impus is a sterpus. Alex is a jompus. Every tumpus is a impus. Alex is a lempus. Every dumpus is a lempus. Every wumpus is a jompus. Every dumpus is a rompus. Every lorpus is a brimpus. Every dumpus is a grimpus. Alex is a dumpus. Every dumpus is a gorpus. Rex is a wumpus. Every wumpus is a numpus. Rex is a numpus. Alex is a yumpus. Every yumpus is a vumpus. Alex is a zumpus. Polly is a tumpus. Every wumpus is a tumpus. Every yumpus is a rompus. Polly is a dumpus. Every rompus is a lempus. Every shumpus is a brimpus. Every gorpus is a shumpus. Is Rex a lempus or numpus?",
+      "chain_of_thought": [
+        "Rex is a numpus."
+      ],
+      "answer": "numpus"
+    }
+  },
+  "example31": {
+    "test_example": {
+      "question": "Every wumpus is a vumpus. Every jompus is a lorpus. Every wumpus is a yumpus. Every rompus is a yumpus. Max is a wumpus. Fae is a numpus. Every grimpus is a wumpus. Every grimpus is a lorpus. Every zumpus is a lorpus. Every dumpus is a brimpus. Every brimpus is a yumpus. Max is a dumpus. Fae is a yumpus. Every vumpus is a brimpus. Every wumpus is a impus. Fae is a tumpus. Every dumpus is a rompus. Every numpus is a impus. Every numpus is a jompus. Fae is a zumpus. Every jompus is a shumpus. Every lempus is a sterpus. Max is a yumpus. Every numpus is a tumpus. Every lempus is a brimpus. Every yumpus is a impus. Every vumpus is a impus. Fae is a wumpus. Max is a sterpus. Every vumpus is a lempus. Every jompus is a grimpus. Every wumpus is a shumpus. Every rompus is a gorpus. Every zumpus is a numpus. Fae is a gorpus. Every zumpus is a tumpus. Every rompus is a vumpus. Every wumpus is a dumpus. Is Fae a tumpus or sterpus?",
+      "chain_of_thought": [
+        "Fae is a tumpus."
+      ],
+      "answer": "tumpus"
+    }
+  },
+  "example32": {
+    "test_example": {
+      "question": "Alex is a vumpus. Rex is a rompus. Every yumpus is a numpus. Fae is a yumpus. Sam is a wumpus. Sam is a yumpus. Every vumpus is a impus. Every numpus is a gorpus. Max is a dumpus. Alex is a tumpus. Every numpus is a tumpus. Every wumpus is a jompus. Every dumpus is a numpus. Sally is a tumpus. Every wumpus is a yumpus. Max is a rompus. Every wumpus is a zumpus. Every impus is a shumpus. Every zumpus is a tumpus. Max is a yumpus. Every wumpus is a rompus. Rex is a yumpus. Every zumpus is a impus. Every jompus is a shumpus. Is Polly a Polly or gorpus?",
+      "chain_of_thought": [],
+      "answer": "Polly"
+    }
+  },
+  "example33": {
+    "test_example": {
+      "question": "Fae is a zumpus. Every yumpus is a vumpus. Fae is a wumpus. Fae is a gorpus. Every vumpus is a impus. Every wumpus is a dumpus. Every yumpus is a rompus. Every tumpus is a yumpus. Polly is a rompus. Every gorpus is a wumpus. Sally is a lempus. Every numpus is a vumpus. Every yumpus is a zumpus. Every wumpus is a gorpus. Every yumpus is a shumpus. Every lorpus is a wumpus. Every yumpus is a tumpus. Every tumpus is a shumpus. Sally is a gorpus. Every dumpus is a shumpus. Every rompus is a vumpus. Every rompus is a numpus. Fae is a dumpus. Every grimpus is a lorpus. Sally is a vumpus. Every grimpus is a brimpus. Every lempus is a grimpus. Every numpus is a tumpus. Polly is a zumpus. Every dumpus is a gorpus. Polly is a yumpus. Every tumpus is a vumpus. Every yumpus is a impus. Every wumpus is a zumpus. Every numpus is a jompus. Every brimpus is a wumpus. Every yumpus is a sterpus. Is Fae a wumpus or yumpus?",
+      "chain_of_thought": [
+        "Fae is a gorpus.",
+        "Every gorpus is a wumpus."
+      ],
+      "answer": "wumpus"
+    }
+  },
+  "example34": {
+    "test_example": {
+      "question": "Every sterpus is a lorpus. Every gorpus is a sterpus. Every wumpus is a dumpus. Stella is a wumpus. Stella is a dumpus. Max is a wumpus. Every gorpus is a yumpus. Every impus is a shumpus. Sally is a zumpus. Every rompus is a jompus. Every wumpus is a jompus. Sally is a vumpus. Every dumpus is a grimpus. Every impus is a lorpus. Sally is a lempus. Every dumpus is a sterpus. Every rompus is a tumpus. Max is a sterpus. Sally is a sterpus. Sally is a yumpus. Every zumpus is a lempus. Every zumpus is a wumpus. Every wumpus is a rompus. Max is a gorpus. Every grimpus is a lorpus. Every wumpus is a numpus. Every tumpus is a impus. Max is a brimpus. Every zumpus is a yumpus. Stella is a yumpus. Is Stella a numpus or yumpus?",
+      "chain_of_thought": [
+        "Stella is a wumpus.",
+        "Every wumpus is a numpus."
+      ],
+      "answer": "numpus"
+    }
+  },
+  "example35": {
+    "test_example": {
+      "question": "Every wumpus is a rompus. Every wumpus is a yumpus. Sally is a lorpus. Every vumpus is a lorpus. Stella is a vumpus. Every vumpus is a grimpus. Sally is a zumpus. Wren is a vumpus. Max is a lorpus. Every impus is a sterpus. Every rompus is a shumpus. Every wumpus is a zumpus. Sally is a tumpus. Every dumpus is a impus. Sally is a wumpus. Every yumpus is a grimpus. Every shumpus is a lempus. Every jompus is a shumpus. Every rompus is a numpus. Sally is a jompus. Every tumpus is a gorpus. Sally is a impus. Every yumpus is a zumpus. Sally is a yumpus. Every wumpus is a numpus. Rex is a wumpus. Every dumpus is a gorpus. Fae is a dumpus. Every tumpus is a vumpus. Every zumpus is a dumpus. Max is a grimpus. Every numpus is a shumpus. Max is a jompus. Every zumpus is a lempus. Fae is a vumpus. Every yumpus is a numpus. Is Wren a lempus or lorpus?",
+      "chain_of_thought": [
+        "Wren is a vumpus.",
+        "Every vumpus is a lorpus."
+      ],
+      "answer": "lorpus"
+    }
+  },
+  "example36": {
+    "test_example": {
+      "question": "Fae is a wumpus. Every jompus is a shumpus. Every numpus is a sterpus. Every wumpus is a zumpus. Every yumpus is a zumpus. Alex is a jompus. Every vumpus is a impus. Every zumpus is a vumpus. Every yumpus is a rompus. Fae is a vumpus. Rex is a zumpus. Wren is a tumpus. Every dumpus is a lorpus. Every jompus is a gorpus. Wren is a rompus. Max is a dumpus. Every numpus is a gorpus. Every numpus is a lempus. Every rompus is a sterpus. Fae is a yumpus. Every rompus is a tumpus. Fae is a tumpus. Every dumpus is a grimpus. Every impus is a lempus. Alex is a lempus. Sally is a zumpus. Sam is a sterpus. Rex is a dumpus. Wren is a numpus. Every wumpus is a tumpus. Is Max a sterpus or lorpus?",
+      "chain_of_thought": [
+        "Max is a dumpus.",
+        "Every dumpus is a lorpus."
+      ],
+      "answer": "lorpus"
+    }
+  },
+  "example37": {
+    "test_example": {
+      "question": "Every lempus is a wumpus. Every zumpus is a tumpus. Every rompus is a lorpus. Every yumpus is a sterpus. Rex is a zumpus. Every dumpus is a rompus. Every tumpus is a shumpus. Rex is a wumpus. Every grimpus is a zumpus. Every numpus is a lorpus. Every gorpus is a lorpus. Every shumpus is a sterpus. Rex is a lempus. Every wumpus is a lempus. Every yumpus is a vumpus. Every wumpus is a yumpus. Every yumpus is a dumpus. Every zumpus is a sterpus. Every gorpus is a zumpus. Every dumpus is a jompus. Every gorpus is a grimpus. Every zumpus is a shumpus. Stella is a dumpus. Rex is a wumpus. Every dumpus is a gorpus. Every yumpus is a rompus. Every dumpus is a zumpus. Stella is a impus. Every shumpus is a lempus. Every tumpus is a impus. Every numpus is a vumpus. Stella is a yumpus. Every wumpus is a zumpus. Every yumpus is a numpus. Sally is a brimpus. Every jompus is a gorpus. Every dumpus is a impus. Is Stella a vumpus or yumpus?",
+      "chain_of_thought": [
+        "Stella is a yumpus.",
+        "Every yumpus is a vumpus."
+      ],
+      "answer": "vumpus"
+    }
+  },
+  "example38": {
+    "test_example": {
+      "question": "Every dumpus is a tumpus. Every dumpus is a wumpus. Every zumpus is a numpus. Every impus is a lempus. Stella is a impus. Every yumpus is a jompus. Every wumpus is a vumpus. Stella is a shumpus. Every rompus is a sterpus. Every shumpus is a grimpus. Every yumpus is a lorpus. Every vumpus is a lorpus. Every dumpus is a lorpus. Every dumpus is a vumpus. Every yumpus is a impus. Rex is a tumpus. Every zumpus is a jompus. Every dumpus is a brimpus. Every sterpus is a grimpus. Every wumpus is a gorpus. Every vumpus is a jompus. Polly is a rompus. Every vumpus is a impus. Rex is a numpus. Every wumpus is a impus. Rex is a wumpus. Every zumpus is a tumpus. Every wumpus is a yumpus. Every yumpus is a zumpus. Every wumpus is a lempus. Every yumpus is a tumpus. Every rompus is a shumpus. Every wumpus is a numpus. Max is a rompus. Every vumpus is a brimpus. Rex is a yumpus. Every zumpus is a dumpus. Every jompus is a gorpus. Polly is a wumpus. Is Rex a grimpus or wumpus?",
+      "chain_of_thought": [
+        "Rex is a yumpus.",
+        "Every yumpus is a zumpus.",
+        "Every zumpus is a dumpus.",
+        "Every dumpus is a wumpus."
+      ],
+      "answer": "wumpus"
+    }
+  },
+  "example39": {
+    "test_example": {
+      "question": "Polly is a zumpus. Rex is a sterpus. Every wumpus is a dumpus. Every wumpus is a brimpus. Every jompus is a sterpus. Rex is a yumpus. Every tumpus is a vumpus. Rex is a impus. Every rompus is a numpus. Every numpus is a shumpus. Every jompus is a lempus. Every zumpus is a dumpus. Sally is a numpus. Sally is a grimpus. Every rompus is a vumpus. Every vumpus is a gorpus. Rex is a dumpus. Every yumpus is a dumpus. Stella is a wumpus. Every wumpus is a yumpus. Every wumpus is a tumpus. Rex is a zumpus. Every wumpus is a rompus. Every tumpus is a shumpus. Every zumpus is a sterpus. Fae is a lorpus. Polly is a rompus. Every impus is a jompus. Every rompus is a gorpus. Every jompus is a grimpus. Every tumpus is a gorpus. Is Stella a sterpus or gorpus?",
+      "chain_of_thought": [
+        "Stella is a wumpus.",
+        "Every wumpus is a rompus.",
+        "Every rompus is a gorpus."
+      ],
+      "answer": "gorpus"
+    }
+  },
+  "example40": {
+    "test_example": {
+      "question": "Every dumpus is a jompus. Every gorpus is a grimpus. Every rompus is a vumpus. Every dumpus is a sterpus. Wren is a wumpus. Every gorpus is a lorpus. Every zumpus is a sterpus. Every yumpus is a zumpus. Every numpus is a impus. Stella is a zumpus. Every jompus is a shumpus. Every gorpus is a sterpus. Every dumpus is a shumpus. Every wumpus is a numpus. Every wumpus is a impus. Every tumpus is a gorpus. Every yumpus is a dumpus. Every dumpus is a rompus. Every shumpus is a sterpus. Every yumpus is a tumpus. Wren is a lempus. Sam is a yumpus. Stella is a shumpus. Every zumpus is a vumpus. Sam is a zumpus. Every zumpus is a dumpus. Is Wren a impus or grimpus?",
+      "chain_of_thought": [
+        "Wren is a wumpus.",
+        "Every wumpus is a impus."
+      ],
+      "answer": "impus"
+    }
+  },
+  "example41": {
+    "test_example": {
+      "question": "Every yumpus is a zumpus. Every rompus is a gorpus. Stella is a lempus. Every dumpus is a lempus. Fae is a numpus. Every sterpus is a lorpus. Stella is a wumpus. Every gorpus is a grimpus. Stella is a yumpus. Stella is a rompus. Every jompus is a grimpus. Every brimpus is a wumpus. Fae is a wumpus. Every dumpus is a tumpus. Every jompus is a gorpus. Stella is a shumpus. Fae is a vumpus. Every numpus is a impus. Every lempus is a grimpus. Stella is a zumpus. Every numpus is a lorpus. Every impus is a brimpus. Every yumpus is a dumpus. Every vumpus is a sterpus. Every dumpus is a jompus. Alex is a brimpus. Every rompus is a tumpus. Is Fae a zumpus or lorpus?",
+      "chain_of_thought": [
+        "Fae is a numpus.",
+        "Every numpus is a lorpus."
+      ],
+      "answer": "lorpus"
+    }
+  },
+  "example43": {
+    "test_example": {
+      "question": "Every yumpus is a shumpus. Every yumpus is a zumpus. Fae is a wumpus. Alex is a zumpus. Every wumpus is a dumpus. Every vumpus is a gorpus. Every dumpus is a rompus. Every dumpus is a vumpus. Every wumpus is a rompus. Every impus is a shumpus. Alex is a yumpus. Every zumpus is a impus. Every zumpus is a tumpus. Every rompus is a numpus. Every vumpus is a wumpus. Every rompus is a vumpus. Every wumpus is a lempus. Sally is a lorpus. Every lempus is a sterpus. Every tumpus is a shumpus. Every tumpus is a brimpus. Every vumpus is a jompus. Every grimpus is a wumpus. Every wumpus is a yumpus. Fae is a rompus. Every vumpus is a grimpus. Every numpus is a jompus. Is Alex a jompus or shumpus?",
+      "chain_of_thought": [
+        "Alex is a yumpus.",
+        "Every yumpus is a shumpus."
+      ],
+      "answer": "shumpus"
+    }
+  },
+  "example44": {
+    "test_example": {
+      "question": "Every dumpus is a vumpus. Wren is a wumpus. Every rompus is a gorpus. Stella is a zumpus. Every yumpus is a tumpus. Every dumpus is a rompus. Every wumpus is a dumpus. Every grimpus is a brimpus. Stella is a numpus. Max is a brimpus. Stella is a gorpus. Every vumpus is a yumpus. Every vumpus is a jompus. Every vumpus is a gorpus. Max is a shumpus. Every yumpus is a numpus. Every shumpus is a brimpus. Every zumpus is a gorpus. Max is a sterpus. Every shumpus is a lempus. Every yumpus is a zumpus. Every grimpus is a wumpus. Every impus is a sterpus. Every numpus is a shumpus. Every lempus is a grimpus. Every wumpus is a lorpus. Every tumpus is a gorpus. Every wumpus is a vumpus. Every zumpus is a numpus. Every rompus is a impus. Every tumpus is a shumpus. Stella is a yumpus. Every rompus is a yumpus. Is Wren a yumpus or brimpus?",
+      "chain_of_thought": [
+        "Wren is a wumpus.",
+        "Every wumpus is a vumpus.",
+        "Every vumpus is a yumpus."
+      ],
+      "answer": "yumpus"
+    }
+  },
+  "example45": {
+    "test_example": {
+      "question": "Every numpus is a shumpus. Every impus is a shumpus. Alex is a zumpus. Every rompus is a grimpus. Stella is a yumpus. Every zumpus is a sterpus. Alex is a gorpus. Rex is a grimpus. Every dumpus is a numpus. Every yumpus is a grimpus. Stella is a zumpus. Every numpus is a lempus. Every lempus is a grimpus. Every dumpus is a tumpus. Every wumpus is a zumpus. Every impus is a gorpus. Every tumpus is a impus. Polly is a yumpus. Every gorpus is a sterpus. Every tumpus is a shumpus. Stella is a wumpus. Every wumpus is a yumpus. Alex is a dumpus. Every zumpus is a rompus. Alex is a numpus. Every zumpus is a vumpus. Every zumpus is a jompus. Every rompus is a jompus. Every vumpus is a lempus. Every zumpus is a gorpus. Polly is a dumpus. Fae is a numpus. Alex is a tumpus. Is Sally a grimpus or Sally?",
+      "chain_of_thought": [],
+      "answer": "Sally"
+    }
+  },
+  "example46": {
+    "test_example": {
+      "question": "Every impus is a jompus. Every yumpus is a rompus. Every tumpus is a impus. Every yumpus is a numpus. Wren is a yumpus. Stella is a shumpus. Every vumpus is a jompus. Every tumpus is a gorpus. Every numpus is a jompus. Every wumpus is a zumpus. Every wumpus is a tumpus. Every zumpus is a dumpus. Wren is a lempus. Every yumpus is a shumpus. Every yumpus is a sterpus. Every dumpus is a numpus. Every vumpus is a lempus. Every numpus is a gorpus. Sally is a wumpus. Every zumpus is a rompus. Wren is a rompus. Every dumpus is a gorpus. Rex is a vumpus. Is Sally a jompus or Alex?",
+      "chain_of_thought": [],
+      "answer": "jompus"
+    }
+  },
+  "example48": {
+    "test_example": {
+      "question": "Every vumpus is a grimpus. Every wumpus is a zumpus. Fae is a grimpus. Every numpus is a jompus. Every vumpus is a impus. Every wumpus is a dumpus. Every yumpus is a rompus. Every dumpus is a numpus. Every dumpus is a rompus. Sam is a lempus. Every shumpus is a lempus. Every wumpus is a tumpus. Every numpus is a tumpus. Every wumpus is a yumpus. Max is a wumpus. Sam is a impus. Every lempus is a sterpus. Polly is a impus. Every zumpus is a rompus. Rex is a impus. Fae is a impus. Sam is a vumpus. Wren is a grimpus. Every numpus is a shumpus. Every yumpus is a dumpus. Every vumpus is a gorpus. Is Max a impus or jompus?",
+      "chain_of_thought": [
+        "Max is a wumpus.",
+        "Every wumpus is a dumpus.",
+        "Every dumpus is a numpus.",
+        "Every numpus is a jompus."
+      ],
+      "answer": "jompus"
+    }
+  },
+  "example50": {
+    "test_example": {
+      "question": "Every jompus is a gorpus. Every dumpus is a numpus. Every rompus is a tumpus. Every numpus is a vumpus. Every impus is a grimpus. Wren is a yumpus. Every vumpus is a shumpus. Every sterpus is a brimpus. Every rompus is a sterpus. Polly is a tumpus. Polly is a rompus. Every tumpus is a jompus. Wren is a wumpus. Every dumpus is a impus. Every impus is a shumpus. Every jompus is a sterpus. Every gorpus is a sterpus. Every wumpus is a zumpus. Every numpus is a shumpus. Every yumpus is a zumpus. Every sterpus is a lorpus. Every yumpus is a impus. Every wumpus is a yumpus. Every numpus is a grimpus. Every shumpus is a lempus. Every yumpus is a dumpus. Is Wren a lorpus or zumpus?",
+      "chain_of_thought": [
+        "Wren is a wumpus.",
+        "Every wumpus is a zumpus."
+      ],
+      "answer": "zumpus"
+    }
+  },
+  "example51": {
+    "test_example": {
+      "question": "Sam is a yumpus. Rex is a grimpus. Every gorpus is a shumpus. Every yumpus is a impus. Polly is a grimpus. Every numpus is a lorpus. Every wumpus is a brimpus. Every zumpus is a vumpus. Every dumpus is a lorpus. Every wumpus is a dumpus. Every zumpus is a lorpus. Every tumpus is a vumpus. Every zumpus is a tumpus. Every lempus is a sterpus. Rex is a gorpus. Every impus is a lempus. Every numpus is a sterpus. Max is a wumpus. Every zumpus is a rompus. Every yumpus is a zumpus. Every dumpus is a jompus. Every jompus is a grimpus. Every numpus is a vumpus. Every rompus is a vumpus. Max is a gorpus. Every vumpus is a sterpus. Max is a jompus. Every yumpus is a numpus. Every numpus is a impus. Every dumpus is a shumpus. Is Sam a brimpus or sterpus?",
+      "chain_of_thought": [
+        "Sam is a yumpus.",
+        "Every yumpus is a numpus.",
+        "Every numpus is a sterpus."
+      ],
+      "answer": "sterpus"
+    }
+  },
+  "example52": {
+    "test_example": {
+      "question": "Every wumpus is a yumpus. Max is a wumpus. Every yumpus is a jompus. Every shumpus is a lempus. Every gorpus is a shumpus. Polly is a numpus. Every numpus is a tumpus. Every impus is a gorpus. Sam is a numpus. Every jompus is a lorpus. Every zumpus is a jompus. Polly is a rompus. Every dumpus is a numpus. Every wumpus is a zumpus. Every numpus is a gorpus. Every dumpus is a vumpus. Max is a zumpus. Every rompus is a numpus. Every dumpus is a sterpus. Every rompus is a sterpus. Every yumpus is a grimpus. Every vumpus is a shumpus. Every numpus is a impus. Max is a yumpus. Every dumpus is a rompus. Polly is a dumpus. Every yumpus is a zumpus. Every dumpus is a shumpus. Polly is a vumpus. Every shumpus is a sterpus. Every wumpus is a jompus. Every yumpus is a tumpus. Is Max a lorpus or lempus?",
+      "chain_of_thought": [
+        "Max is a yumpus.",
+        "Every yumpus is a jompus.",
+        "Every jompus is a lorpus."
+      ],
+      "answer": "lorpus"
+    }
+  },
+  "example53": {
+    "test_example": {
+      "question": "Rex is a impus. Every wumpus is a zumpus. Rex is a jompus. Sally is a impus. Stella is a yumpus. Every impus is a lempus. Every dumpus is a numpus. Every zumpus is a tumpus. Every rompus is a numpus. Every sterpus is a lorpus. Every dumpus is a vumpus. Sally is a grimpus. Every yumpus is a zumpus. Every zumpus is a dumpus. Every numpus is a gorpus. Every dumpus is a brimpus. Every rompus is a vumpus. Every rompus is a tumpus. Sam is a brimpus. Every shumpus is a sterpus. Every tumpus is a shumpus. Sally is a wumpus. Every wumpus is a yumpus. Sam is a lempus. Every tumpus is a gorpus. Every zumpus is a numpus. Every impus is a grimpus. Stella is a wumpus. Every jompus is a brimpus. Sally is a lempus. Every jompus is a sterpus. Every zumpus is a jompus. Sam is a numpus. Every dumpus is a rompus. Is Sally a grimpus or brimpus?",
+      "chain_of_thought": [
+        "Sally is a grimpus."
+      ],
+      "answer": "grimpus"
+    }
+  },
+  "example54": {
+    "test_example": {
+      "question": "Alex is a yumpus. Every wumpus is a yumpus. Every tumpus is a lempus. Every tumpus is a impus. Every yumpus is a numpus. Fae is a zumpus. Alex is a rompus. Every yumpus is a rompus. Every wumpus is a dumpus. Stella is a vumpus. Alex is a sterpus. Every sterpus is a grimpus. Every tumpus is a sterpus. Stella is a jompus. Every rompus is a shumpus. Every wumpus is a shumpus. Every numpus is a shumpus. Every vumpus is a lorpus. Fae is a yumpus. Wren is a impus. Fae is a wumpus. Every dumpus is a shumpus. Stella is a tumpus. Every gorpus is a lorpus. Every wumpus is a zumpus. Wren is a dumpus. Every lempus is a grimpus. Every zumpus is a shumpus. Every wumpus is a vumpus. Every wumpus is a gorpus. Stella is a dumpus. Is Fae a lorpus or grimpus?",
+      "chain_of_thought": [
+        "Fae is a wumpus.",
+        "Every wumpus is a gorpus.",
+        "Every gorpus is a lorpus."
+      ],
+      "answer": "lorpus"
+    }
+  },
+  "example55": {
+    "test_example": {
+      "question": "Max is a tumpus. Every dumpus is a numpus. Every tumpus is a vumpus. Every shumpus is a lempus. Every numpus is a sterpus. Every rompus is a impus. Every gorpus is a lorpus. Fae is a zumpus. Every rompus is a jompus. Every lempus is a brimpus. Wren is a impus. Alex is a zumpus. Polly is a zumpus. Polly is a dumpus. Every rompus is a sterpus. Fae is a tumpus. Rex is a grimpus. Every tumpus is a shumpus. Fae is a wumpus. Max is a vumpus. Every dumpus is a rompus. Every grimpus is a lorpus. Every wumpus is a yumpus. Max is a lempus. Every impus is a gorpus. Max is a lorpus. Every rompus is a lorpus. Alex is a sterpus. Alex is a dumpus. Every jompus is a sterpus. Wren is a dumpus. Alex is a yumpus. Every wumpus is a zumpus. Every impus is a sterpus. Every shumpus is a brimpus. Alex is a jompus. Alex is a wumpus. Every yumpus is a zumpus. Every numpus is a gorpus. Every gorpus is a grimpus. Every jompus is a gorpus. Alex is a gorpus. Is Fae a vumpus or sterpus?",
+      "chain_of_thought": [
+        "Fae is a tumpus.",
+        "Every tumpus is a vumpus."
+      ],
+      "answer": "vumpus"
+    }
+  },
+  "example57": {
+    "test_example": {
+      "question": "Every zumpus is a dumpus. Alex is a zumpus. Every zumpus is a vumpus. Every wumpus is a tumpus. Every gorpus is a lempus. Polly is a yumpus. Every rompus is a vumpus. Stella is a wumpus. Polly is a numpus. Every tumpus is a gorpus. Every zumpus is a rompus. Every gorpus is a shumpus. Rex is a dumpus. Every rompus is a impus. Every wumpus is a yumpus. Every numpus is a sterpus. Polly is a zumpus. Every rompus is a numpus. Sam is a shumpus. Every rompus is a sterpus. Every dumpus is a numpus. Every tumpus is a jompus. Alex is a dumpus. Is Stella a jompus or impus?",
+      "chain_of_thought": [
+        "Stella is a wumpus.",
+        "Every wumpus is a tumpus.",
+        "Every tumpus is a jompus."
+      ],
+      "answer": "jompus"
+    }
+  },
+  "example58": {
+    "test_example": {
+      "question": "Every vumpus is a lempus. Every sterpus is a grimpus. Rex is a yumpus. Every dumpus is a numpus. Stella is a jompus. Every jompus is a lempus. Every wumpus is a rompus. Stella is a shumpus. Every zumpus is a dumpus. Rex is a rompus. Wren is a vumpus. Every jompus is a shumpus. Every tumpus is a brimpus. Every lempus is a wumpus. Every yumpus is a impus. Every tumpus is a grimpus. Wren is a jompus. Every yumpus is a tumpus. Every rompus is a numpus. Every zumpus is a numpus. Every yumpus is a rompus. Stella is a zumpus. Rex is a wumpus. Every impus is a gorpus. Every gorpus is a brimpus. Every wumpus is a brimpus. Every lempus is a sterpus. Alex is a lorpus. Every gorpus is a grimpus. Every wumpus is a tumpus. Every impus is a sterpus. Every zumpus is a vumpus. Is Stella a shumpus or brimpus?",
+      "chain_of_thought": [
+        "Stella is a shumpus."
+      ],
+      "answer": "shumpus"
+    }
+  },
+  "example59": {
+    "test_example": {
+      "question": "Alex is a zumpus. Polly is a rompus. Every yumpus is a zumpus. Every dumpus is a tumpus. Every tumpus is a shumpus. Polly is a yumpus. Sally is a rompus. Every yumpus is a numpus. Sam is a jompus. Fae is a numpus. Wren is a numpus. Every wumpus is a zumpus. Wren is a wumpus. Every rompus is a tumpus. Every yumpus is a shumpus. Sally is a wumpus. Every rompus is a impus. Every rompus is a jompus. Wren is a gorpus. Every numpus is a vumpus. Every yumpus is a dumpus. Sally is a jompus. Every zumpus is a gorpus. Sally is a dumpus. Stella is a yumpus. Wren is a gorpus. Every tumpus is a gorpus. Stella is a shumpus. Is Wren a jompus or vumpus?",
+      "chain_of_thought": [],
+      "answer": "vumpus"
+    }
+  },
+  "example60": {
+    "test_example": {
+      "question": "Every dumpus is a vumpus. Max is a sterpus. Max is a yumpus. Rex is a wumpus. Rex is a dumpus. Every wumpus is a dumpus. Every rompus is a sterpus. Every jompus is a brimpus. Every vumpus is a impus. Every dumpus is a gorpus. Every zumpus is a sterpus. Every wumpus is a yumpus. Every dumpus is a numpus. Every tumpus is a lorpus. Every wumpus is a lempus. Every tumpus is a sterpus. Every wumpus is a jompus. Every zumpus is a rompus. Every vumpus is a shumpus. Every yumpus is a shumpus. Every rompus is a impus. Every zumpus is a vumpus. Every numpus is a lempus. Max is a rompus. Every tumpus is a vumpus. Every numpus is a vumpus. Wren is a lempus. Every gorpus is a shumpus. Every impus is a gorpus. Max is a zumpus. Every rompus is a tumpus. Stella is a brimpus. Wren is a grimpus. Is Rex a brimpus or lorpus?",
+      "chain_of_thought": [
+        "Rex is a wumpus.",
+        "Every wumpus is a jompus.",
+        "Every jompus is a brimpus."
+      ],
+      "answer": "brimpus"
+    }
+  },
+  "example62": {
+    "test_example": {
+      "question": "Every vumpus is a grimpus. Sam is a gorpus. Every dumpus is a vumpus. Wren is a numpus. Every tumpus is a grimpus. Polly is a dumpus. Every zumpus is a sterpus. Max is a wumpus. Every zumpus is a numpus. Stella is a dumpus. Every zumpus is a dumpus. Every yumpus is a zumpus. Fae is a shumpus. Every dumpus is a jompus. Alex is a yumpus. Every dumpus is a grimpus. Every rompus is a gorpus. Wren is a grimpus. Every rompus is a numpus. Max is a rompus. Alex is a lempus. Every tumpus is a vumpus. Every wumpus is a rompus. Stella is a yumpus. Rex is a impus. Every yumpus is a tumpus. Polly is a yumpus. Is Polly a sterpus or gorpus?",
+      "chain_of_thought": [
+        "Polly is a yumpus.",
+        "Every yumpus is a zumpus.",
+        "Every zumpus is a sterpus."
+      ],
+      "answer": "sterpus"
+    }
+  },
+  "example63": {
+    "test_example": {
+      "question": "Every yumpus is a zumpus. Wren is a sterpus. Every tumpus is a jompus. Alex is a rompus. Every wumpus is a grimpus. Every tumpus is a lorpus. Every rompus is a tumpus. Sally is a zumpus. Every jompus is a shumpus. Every zumpus is a dumpus. Sally is a rompus. Every jompus is a gorpus. Every shumpus is a lorpus. Every wumpus is a gorpus. Stella is a impus. Every numpus is a jompus. Every wumpus is a yumpus. Every numpus is a vumpus. Every numpus is a lempus. Every tumpus is a sterpus. Alex is a yumpus. Alex is a wumpus. Every dumpus is a shumpus. Every yumpus is a numpus. Polly is a zumpus. Is Polly a lorpus or Max?",
+      "chain_of_thought": [],
+      "answer": "lorpus"
+    }
+  },
+  "example64": {
+    "test_example": {
+      "question": "Sally is a dumpus. Max is a zumpus. Every wumpus is a rompus. Every yumpus is a jompus. Every yumpus is a lempus. Stella is a dumpus. Every dumpus is a shumpus. Every wumpus is a impus. Max is a gorpus. Every jompus is a shumpus. Every tumpus is a jompus. Wren is a vumpus. Stella is a tumpus. Every wumpus is a yumpus. Fae is a numpus. Wren is a dumpus. Alex is a impus. Polly is a vumpus. Sally is a wumpus. Every yumpus is a rompus. Every wumpus is a numpus. Every yumpus is a numpus. Sam is a zumpus. Every rompus is a tumpus. Stella is a jompus. Every rompus is a impus. Every numpus is a tumpus. Is Sam a zumpus or impus?",
+      "chain_of_thought": [],
+      "answer": "zumpus"
+    }
+  },
+  "example65": {
+    "test_example": {
+      "question": "Every impus is a wumpus. Every yumpus is a numpus. Every grimpus is a lorpus. Every sterpus is a grimpus. Sam is a dumpus. Sam is a tumpus. Every tumpus is a jompus. Every dumpus is a impus. Every yumpus is a dumpus. Fae is a shumpus. Fae is a wumpus. Sam is a wumpus. Every impus is a lempus. Wren is a vumpus. Fae is a tumpus. Every shumpus is a sterpus. Sam is a numpus. Every gorpus is a brimpus. Every dumpus is a numpus. Every zumpus is a jompus. Every dumpus is a rompus. Every rompus is a gorpus. Max is a sterpus. Every zumpus is a dumpus. Fae is a sterpus. Every lempus is a wumpus. Every vumpus is a shumpus. Fae is a lorpus. Every yumpus is a gorpus. Wren is a wumpus. Every wumpus is a numpus. Every yumpus is a zumpus. Sam is a yumpus. Is Sam a wumpus or lorpus?",
+      "chain_of_thought": [
+        "Sam is a dumpus.",
+        "Every dumpus is a impus.",
+        "Every impus is a wumpus."
+      ],
+      "answer": "wumpus"
+    }
+  },
+  "example66": {
+    "test_example": {
+      "question": "Sally is a shumpus. Every yumpus is a tumpus. Wren is a numpus. Every wumpus is a zumpus. Fae is a vumpus. Every rompus is a numpus. Wren is a rompus. Every wumpus is a rompus. Every zumpus is a impus. Wren is a wumpus. Every gorpus is a shumpus. Every yumpus is a dumpus. Every zumpus is a rompus. Every vumpus is a shumpus. Every yumpus is a vumpus. Every zumpus is a jompus. Every jompus is a lempus. Every tumpus is a gorpus. Every yumpus is a numpus. Every zumpus is a numpus. Stella is a jompus. Every dumpus is a tumpus. Max is a yumpus. Is Wren a shumpus or impus?",
+      "chain_of_thought": [],
+      "answer": "impus"
+    }
+  },
+  "example68": {
+    "test_example": {
+      "question": "Every zumpus is a gorpus. Sally is a numpus. Every wumpus is a zumpus. Every gorpus is a lempus. Polly is a vumpus. Every dumpus is a tumpus. Sally is a yumpus. Sally is a wumpus. Every zumpus is a tumpus. Every wumpus is a vumpus. Every rompus is a jompus. Every yumpus is a rompus. Every tumpus is a impus. Every wumpus is a yumpus. Every wumpus is a rompus. Stella is a zumpus. Every tumpus is a gorpus. Every zumpus is a dumpus. Every vumpus is a shumpus. Stella is a vumpus. Is Rex a Rex or Wren?",
+      "chain_of_thought": [],
+      "answer": "Rex"
+    }
+  },
+  "example70": {
+    "test_example": {
+      "question": "Sally is a dumpus. Sam is a gorpus. Every gorpus is a lempus. Max is a numpus. Alex is a shumpus. Every wumpus is a yumpus. Every dumpus is a impus. Rex is a vumpus. Every rompus is a gorpus. Every wumpus is a dumpus. Sally is a yumpus. Sally is a wumpus. Every yumpus is a zumpus. Every shumpus is a lempus. Every yumpus is a rompus. Sam is a numpus. Wren is a gorpus. Max is a yumpus. Wren is a vumpus. Every rompus is a jompus. Every wumpus is a tumpus. Wren is a tumpus. Is Wren a impus or vumpus?",
+      "chain_of_thought": [],
+      "answer": "vumpus"
+    }
+  },
+  "example71": {
+    "test_example": {
+      "question": "Stella is a dumpus. Stella is a vumpus. Sally is a vumpus. Fae is a dumpus. Polly is a zumpus. Every dumpus is a rompus. Fae is a zumpus. Fae is a wumpus. Every dumpus is a numpus. Wren is a gorpus. Every lempus is a sterpus. Every dumpus is a vumpus. Sally is a dumpus. Fae is a rompus. Every yumpus is a gorpus. Polly is a yumpus. Every wumpus is a impus. Polly is a wumpus. Fae is a yumpus. Stella is a lempus. Sally is a wumpus. Every rompus is a vumpus. Every yumpus is a lempus. Every rompus is a sterpus. Every rompus is a impus. Fae is a impus. Every tumpus is a gorpus. Sally is a rompus. Every numpus is a vumpus. Every yumpus is a tumpus. Every vumpus is a grimpus. Stella is a numpus. Wren is a jompus. Every gorpus is a shumpus. Every numpus is a jompus. Every tumpus is a lempus. Is Sally a shumpus or grimpus?",
+      "chain_of_thought": [
+        "Sally is a vumpus.",
+        "Every vumpus is a grimpus."
+      ],
+      "answer": "grimpus"
+    }
+  },
+  "example72": {
+    "test_example": {
+      "question": "Rex is a rompus. Every tumpus is a impus. Every wumpus is a yumpus. Every yumpus is a gorpus. Every wumpus is a rompus. Every zumpus is a impus. Stella is a vumpus. Alex is a zumpus. Sally is a zumpus. Alex is a impus. Alex is a tumpus. Every zumpus is a rompus. Sally is a jompus. Every yumpus is a zumpus. Alex is a wumpus. Fae is a dumpus. Every vumpus is a jompus. Every rompus is a tumpus. Wren is a shumpus. Every tumpus is a sterpus. Rex is a zumpus. Max is a vumpus. Fae is a jompus. Every yumpus is a numpus. Max is a yumpus. Sally is a rompus. Every yumpus is a lempus. Every yumpus is a sterpus. Sally is a dumpus. Rex is a vumpus. Rex is a jompus. Fae is a numpus. Is Alex a numpus or shumpus?",
+      "chain_of_thought": [
+        "Alex is a wumpus.",
+        "Every wumpus is a yumpus.",
+        "Every yumpus is a numpus."
+      ],
+      "answer": "numpus"
+    }
+  },
+  "example73": {
+    "test_example": {
+      "question": "Every lempus is a sterpus. Every wumpus is a gorpus. Every wumpus is a rompus. Every dumpus is a rompus. Every yumpus is a dumpus. Sally is a tumpus. Rex is a dumpus. Every vumpus is a jompus. Stella is a sterpus. Rex is a wumpus. Every yumpus is a tumpus. Alex is a sterpus. Every vumpus is a impus. Every shumpus is a lempus. Every shumpus is a sterpus. Every zumpus is a dumpus. Sam is a lempus. Every jompus is a shumpus. Every rompus is a numpus. Every yumpus is a rompus. Every tumpus is a vumpus. Fae is a impus. Every yumpus is a impus. Sally is a yumpus. Rex is a zumpus. Max is a sterpus. Every vumpus is a sterpus. Is Fae a impus or numpus?",
+      "chain_of_thought": [
+        "Fae is a impus."
+      ],
+      "answer": "impus"
+    }
+  },
+  "example74": {
+    "test_example": {
+      "question": "Sally is a wumpus. Fae is a rompus. Every wumpus is a numpus. Fae is a numpus. Sam is a yumpus. Every zumpus is a lorpus. Sally is a grimpus. Sam is a dumpus. Every dumpus is a lempus. Every yumpus is a tumpus. Every vumpus is a jompus. Polly is a lorpus. Max is a grimpus. Every jompus is a lempus. Every yumpus is a dumpus. Every rompus is a tumpus. Every gorpus is a sterpus. Every zumpus is a shumpus. Every zumpus is a lempus. Wren is a yumpus. Every zumpus is a numpus. Sally is a vumpus. Every wumpus is a shumpus. Sam is a jompus. Sam is a gorpus. Every numpus is a impus. Every dumpus is a tumpus. Every grimpus is a lorpus. Sally is a zumpus. Every zumpus is a jompus. Every zumpus is a gorpus. Every rompus is a numpus. Is Wren a lorpus or tumpus?",
+      "chain_of_thought": [
+        "Wren is a yumpus.",
+        "Every yumpus is a tumpus."
+      ],
+      "answer": "tumpus"
+    }
+  },
+  "example75": {
+    "test_example": {
+      "question": "Every dumpus is a vumpus. Every impus is a lorpus. Every rompus is a gorpus. Stella is a wumpus. Every zumpus is a tumpus. Every yumpus is a shumpus. Wren is a jompus. Wren is a brimpus. Every tumpus is a lorpus. Every dumpus is a gorpus. Sally is a wumpus. Every dumpus is a sterpus. Every shumpus is a brimpus. Stella is a yumpus. Every tumpus is a jompus. Wren is a tumpus. Wren is a impus. Every dumpus is a grimpus. Every dumpus is a rompus. Every wumpus is a dumpus. Sam is a lempus. Every yumpus is a numpus. Sally is a zumpus. Is Sally a jompus or numpus?",
+      "chain_of_thought": [
+        "Sally is a zumpus.",
+        "Every zumpus is a tumpus.",
+        "Every tumpus is a jompus."
+      ],
+      "answer": "jompus"
+    }
+  },
+  "example76": {
+    "test_example": {
+      "question": "Every tumpus is a jompus. Max is a zumpus. Every dumpus is a jompus. Every tumpus is a vumpus. Wren is a dumpus. Every tumpus is a grimpus. Every impus is a sterpus. Every rompus is a tumpus. Every tumpus is a lempus. Every jompus is a shumpus. Every numpus is a sterpus. Every yumpus is a lempus. Max is a wumpus. Max is a lorpus. Every shumpus is a brimpus. Every yumpus is a grimpus. Sally is a gorpus. Every wumpus is a zumpus. Every rompus is a jompus. Fae is a yumpus. Every dumpus is a rompus. Every vumpus is a impus. Every zumpus is a numpus. Every yumpus is a impus. Every wumpus is a numpus. Every gorpus is a lorpus. Every vumpus is a sterpus. Is Max a grimpus or lorpus?",
+      "chain_of_thought": [
+        "Max is a lorpus."
+      ],
+      "answer": "lorpus"
+    }
+  },
+  "example77": {
+    "test_example": {
+      "question": "Every dumpus is a rompus. Every impus is a gorpus. Sam is a yumpus. Wren is a zumpus. Max is a jompus. Stella is a wumpus. Every dumpus is a numpus. Every yumpus is a grimpus. Stella is a dumpus. Polly is a lorpus. Every gorpus is a sterpus. Every vumpus is a jompus. Every yumpus is a gorpus. Every wumpus is a zumpus. Every lorpus is a brimpus. Every dumpus is a jompus. Every dumpus is a lempus. Wren is a impus. Wren is a wumpus. Every dumpus is a shumpus. Sally is a lempus. Max is a zumpus. Stella is a zumpus. Every vumpus is a shumpus. Wren is a brimpus. Every impus is a sterpus. Max is a grimpus. Every impus is a lempus. Every vumpus is a lempus. Max is a yumpus. Polly is a sterpus. Every numpus is a shumpus. Every grimpus is a lorpus. Every yumpus is a zumpus. Polly is a tumpus. Every sterpus is a grimpus. Wren is a yumpus. Every numpus is a vumpus. Every sterpus is a lorpus. Every tumpus is a impus. Is Sam a brimpus or shumpus?",
+      "chain_of_thought": [
+        "Sam is a yumpus.",
+        "Every yumpus is a grimpus.",
+        "Every grimpus is a lorpus.",
+        "Every lorpus is a brimpus."
+      ],
+      "answer": "brimpus"
+    }
+  },
+  "example79": {
+    "test_example": {
+      "question": "Every vumpus is a jompus. Every dumpus is a rompus. Stella is a vumpus. Every rompus is a impus. Every wumpus is a numpus. Sam is a zumpus. Every numpus is a lempus. Every wumpus is a jompus. Every shumpus is a sterpus. Every tumpus is a lempus. Wren is a rompus. Stella is a yumpus. Every gorpus is a sterpus. Every rompus is a grimpus. Polly is a yumpus. Sally is a yumpus. Every rompus is a shumpus. Sam is a wumpus. Every zumpus is a tumpus. Wren is a sterpus. Every gorpus is a shumpus. Wren is a dumpus. Every jompus is a gorpus. Sally is a zumpus. Every wumpus is a zumpus. Every impus is a gorpus. Every tumpus is a gorpus. Every rompus is a tumpus. Every jompus is a shumpus. Every rompus is a lempus. Sally is a impus. Is Sam a sterpus or yumpus?",
+      "chain_of_thought": [
+        "Sam is a wumpus.",
+        "Every wumpus is a jompus.",
+        "Every jompus is a gorpus.",
+        "Every gorpus is a sterpus."
+      ],
+      "answer": "sterpus"
+    }
+  },
+  "example80": {
+    "test_example": {
+      "question": "Fae is a numpus. Every zumpus is a lorpus. Every zumpus is a vumpus. Every yumpus is a rompus. Rex is a impus. Every wumpus is a gorpus. Every yumpus is a sterpus. Every gorpus is a grimpus. Every rompus is a impus. Stella is a jompus. Every dumpus is a lempus. Every vumpus is a shumpus. Every gorpus is a lorpus. Fae is a vumpus. Max is a zumpus. Every gorpus is a lempus. Every yumpus is a vumpus. Every yumpus is a dumpus. Every lempus is a lorpus. Fae is a dumpus. Every tumpus is a jompus. Every numpus is a impus. Every wumpus is a rompus. Fae is a zumpus. Every zumpus is a dumpus. Fae is a yumpus. Max is a dumpus. Every zumpus is a tumpus. Polly is a wumpus. Every yumpus is a numpus. Every shumpus is a grimpus. Every gorpus is a shumpus. Polly is a rompus. Every yumpus is a zumpus. Is Polly a jompus or impus?",
+      "chain_of_thought": [
+        "Polly is a rompus.",
+        "Every rompus is a impus."
+      ],
+      "answer": "impus"
+    }
+  },
+  "example81": {
+    "test_example": {
+      "question": "Polly is a vumpus. Every wumpus is a tumpus. Every yumpus is a dumpus. Sally is a yumpus. Sam is a vumpus. Every dumpus is a grimpus. Sam is a zumpus. Every tumpus is a sterpus. Every tumpus is a vumpus. Every dumpus is a numpus. Every zumpus is a jompus. Every rompus is a gorpus. Every dumpus is a impus. Sally is a dumpus. Every shumpus is a sterpus. Every gorpus is a lempus. Every impus is a grimpus. Every wumpus is a vumpus. Every rompus is a vumpus. Every zumpus is a vumpus. Sam is a wumpus. Every rompus is a shumpus. Every wumpus is a zumpus. Every zumpus is a rompus. Is Sally a grimpus or jompus?",
+      "chain_of_thought": [
+        "Sally is a dumpus.",
+        "Every dumpus is a grimpus."
+      ],
+      "answer": "grimpus"
+    }
+  },
+  "example82": {
+    "test_example": {
+      "question": "Every wumpus is a lorpus. Every tumpus is a shumpus. Every rompus is a vumpus. Every yumpus is a zumpus. Every yumpus is a rompus. Alex is a sterpus. Every sterpus is a grimpus. Stella is a impus. Every dumpus is a numpus. Every wumpus is a jompus. Max is a grimpus. Alex is a lempus. Max is a gorpus. Stella is a lorpus. Max is a vumpus. Alex is a vumpus. Every rompus is a numpus. Stella is a zumpus. Fae is a lempus. Stella is a lempus. Max is a yumpus. Alex is a impus. Stella is a wumpus. Every tumpus is a vumpus. Every wumpus is a lempus. Every yumpus is a dumpus. Every yumpus is a grimpus. Every yumpus is a tumpus. Every wumpus is a impus. Every sterpus is a brimpus. Fae is a numpus. Every impus is a lorpus. Max is a dumpus. Every jompus is a lempus. Is Stella a lorpus or grimpus?",
+      "chain_of_thought": [
+        "Stella is a lorpus."
+      ],
+      "answer": "lorpus"
+    }
+  },
+  "example83": {
+    "test_example": {
+      "question": "Every rompus is a grimpus. Every yumpus is a grimpus. Fae is a wumpus. Every tumpus is a yumpus. Every impus is a shumpus. Every wumpus is a dumpus. Every yumpus is a lempus. Fae is a impus. Every wumpus is a yumpus. Every sterpus is a lorpus. Every zumpus is a numpus. Every wumpus is a impus. Every dumpus is a shumpus. Every zumpus is a rompus. Every vumpus is a wumpus. Every tumpus is a sterpus. Wren is a numpus. Every wumpus is a zumpus. Wren is a jompus. Every zumpus is a jompus. Every rompus is a numpus. Every dumpus is a brimpus. Fae is a yumpus. Every wumpus is a lorpus. Every wumpus is a yumpus. Every dumpus is a sterpus. Every zumpus is a gorpus. Wren is a zumpus. Every dumpus is a tumpus. Every dumpus is a lorpus. Every rompus is a lempus. Every zumpus is a vumpus. Every brimpus is a yumpus. Every wumpus is a lempus. Is Wren a lorpus or jompus?",
+      "chain_of_thought": [
+        "Wren is a jompus."
+      ],
+      "answer": "jompus"
+    }
+  },
+  "example84": {
+    "test_example": {
+      "question": "Polly is a numpus. Every dumpus is a jompus. Every impus is a shumpus. Every numpus is a jompus. Polly is a dumpus. Every zumpus is a impus. Every rompus is a sterpus. Every wumpus is a zumpus. Every yumpus is a shumpus. Every yumpus is a vumpus. Every vumpus is a impus. Every tumpus is a vumpus. Every zumpus is a tumpus. Every gorpus is a grimpus. Every vumpus is a sterpus. Every dumpus is a lorpus. Every yumpus is a rompus. Every zumpus is a vumpus. Polly is a jompus. Every zumpus is a gorpus. Every wumpus is a rompus. Rex is a yumpus. Every impus is a grimpus. Rex is a zumpus. Rex is a rompus. Every gorpus is a sterpus. Every wumpus is a vumpus. Polly is a lempus. Every rompus is a impus. Rex is a wumpus. Is Rex a jompus or sterpus?",
+      "chain_of_thought": [
+        "Rex is a rompus.",
+        "Every rompus is a sterpus."
+      ],
+      "answer": "sterpus"
+    }
+  },
+  "example85": {
+    "test_example": {
+      "question": "Every dumpus is a impus. Every gorpus is a brimpus. Fae is a vumpus. Every impus is a brimpus. Polly is a wumpus. Polly is a brimpus. Every tumpus is a lempus. Every zumpus is a wumpus. Every wumpus is a tumpus. Polly is a numpus. Every jompus is a shumpus. Every dumpus is a lorpus. Every tumpus is a gorpus. Every zumpus is a yumpus. Polly is a jompus. Every zumpus is a dumpus. Polly is a yumpus. Every gorpus is a shumpus. Every rompus is a impus. Sally is a zumpus. Every yumpus is a vumpus. Every gorpus is a lempus. Every dumpus is a rompus. Sally is a dumpus. Every lempus is a sterpus. Sally is a rompus. Every tumpus is a jompus. Every rompus is a grimpus. Every yumpus is a tumpus. Every wumpus is a yumpus. Every zumpus is a rompus. Every impus is a yumpus. Is Sally a grimpus or vumpus?",
+      "chain_of_thought": [
+        "Sally is a rompus.",
+        "Every rompus is a grimpus."
+      ],
+      "answer": "grimpus"
+    }
+  },
+  "example86": {
+    "test_example": {
+      "question": "Rex is a wumpus. Every rompus is a tumpus. Every numpus is a sterpus. Every gorpus is a grimpus. Fae is a wumpus. Every wumpus is a yumpus. Every rompus is a vumpus. Every yumpus is a grimpus. Every rompus is a numpus. Every yumpus is a zumpus. Every tumpus is a jompus. Every tumpus is a lempus. Every zumpus is a numpus. Rex is a shumpus. Every rompus is a impus. Every wumpus is a zumpus. Every zumpus is a dumpus. Rex is a dumpus. Every zumpus is a sterpus. Fae is a numpus. Every impus is a grimpus. Every tumpus is a vumpus. Fae is a yumpus. Every zumpus is a gorpus. Every dumpus is a tumpus. Rex is a numpus. Every jompus is a sterpus. Every zumpus is a rompus. Fae is a dumpus. Every numpus is a grimpus. Every yumpus is a vumpus. Every wumpus is a grimpus. Is Sam a lempus or Sam?",
+      "chain_of_thought": [],
+      "answer": "Sam"
+    }
+  },
+  "example87": {
+    "test_example": {
+      "question": "Every tumpus is a jompus. Every dumpus is a jompus. Sally is a dumpus. Alex is a wumpus. Every jompus is a wumpus. Every impus is a shumpus. Every shumpus is a grimpus. Every numpus is a jompus. Every gorpus is a lempus. Rex is a shumpus. Sally is a yumpus. Every numpus is a tumpus. Every tumpus is a sterpus. Every vumpus is a gorpus. Every impus is a sterpus. Every rompus is a lorpus. Rex is a yumpus. Every rompus is a lempus. Wren is a lempus. Every yumpus is a numpus. Every wumpus is a zumpus. Every yumpus is a vumpus. Every zumpus is a rompus. Every zumpus is a grimpus. Every wumpus is a brimpus. Every tumpus is a shumpus. Every zumpus is a yumpus. Sally is a impus. Every numpus is a lempus. Every sterpus is a brimpus. Sally is a numpus. Rex is a jompus. Alex is a vumpus. Rex is a wumpus. Is Alex a yumpus or wumpus?",
+      "chain_of_thought": [
+        "Alex is a wumpus.",
+        "Every wumpus is a zumpus.",
+        "Every zumpus is a yumpus."
+      ],
+      "answer": "yumpus"
+    }
+  },
+  "example88": {
+    "test_example": {
+      "question": "Sam is a impus. Fae is a sterpus. Every jompus is a lempus. Every vumpus is a impus. Every zumpus is a vumpus. Sam is a rompus. Every vumpus is a jompus. Every wumpus is a gorpus. Every impus is a lempus. Every dumpus is a lempus. Sally is a rompus. Every wumpus is a numpus. Every gorpus is a lempus. Alex is a yumpus. Wren is a shumpus. Wren is a sterpus. Alex is a wumpus. Every zumpus is a numpus. Every zumpus is a dumpus. Every zumpus is a gorpus. Every dumpus is a jompus. Sally is a tumpus. Every zumpus is a jompus. Every wumpus is a zumpus. Every vumpus is a gorpus. Is Sally a rompus or lempus?",
+      "chain_of_thought": [
+        "Sally is a rompus."
+      ],
+      "answer": "rompus"
+    }
+  },
+  "example89": {
+    "test_example": {
+      "question": "Every zumpus is a sterpus. Every shumpus is a sterpus. Every wumpus is a numpus. Wren is a rompus. Alex is a gorpus. Stella is a shumpus. Sam is a dumpus. Every numpus is a impus. Every zumpus is a tumpus. Every yumpus is a zumpus. Rex is a lorpus. Every yumpus is a tumpus. Fae is a vumpus. Every wumpus is a rompus. Sally is a jompus. Every rompus is a tumpus. Every wumpus is a tumpus. Stella is a yumpus. Sam is a impus. Every lempus is a sterpus. Sam is a lorpus. Every yumpus is a vumpus. Every rompus is a gorpus. Wren is a wumpus. Every zumpus is a dumpus. Every dumpus is a vumpus. Every numpus is a gorpus. Wren is a jompus. Wren is a numpus. Every dumpus is a grimpus. Alex is a lempus. Every yumpus is a sterpus. Is Wren a vumpus or gorpus?",
+      "chain_of_thought": [
+        "Wren is a numpus.",
+        "Every numpus is a gorpus."
+      ],
+      "answer": "gorpus"
+    }
+  },
+  "example90": {
+    "test_example": {
+      "question": "Max is a vumpus. Every yumpus is a vumpus. Rex is a tumpus. Wren is a rompus. Wren is a tumpus. Every zumpus is a gorpus. Sam is a tumpus. Wren is a jompus. Polly is a rompus. Every rompus is a jompus. Every wumpus is a tumpus. Stella is a sterpus. Fae is a vumpus. Rex is a wumpus. Max is a sterpus. Rex is a shumpus. Every impus is a gorpus. Polly is a zumpus. Every yumpus is a dumpus. Every wumpus is a jompus. Every jompus is a lempus. Every jompus is a sterpus. Polly is a yumpus. Fae is a dumpus. Rex is a lempus. Fae is a zumpus. Every rompus is a vumpus. Every numpus is a vumpus. Fae is a yumpus. Fae is a numpus. Every yumpus is a zumpus. Sally is a jompus. Rex is a dumpus. Every zumpus is a impus. Is Fae a gorpus or tumpus?",
+      "chain_of_thought": [
+        "Fae is a zumpus.",
+        "Every zumpus is a gorpus."
+      ],
+      "answer": "gorpus"
+    }
+  },
+  "example91": {
+    "test_example": {
+      "question": "Every zumpus is a sterpus. Every dumpus is a numpus. Every rompus is a sterpus. Every wumpus is a vumpus. Max is a lempus. Every yumpus is a dumpus. Every zumpus is a vumpus. Rex is a vumpus. Every yumpus is a tumpus. Every numpus is a shumpus. Every rompus is a impus. Every yumpus is a gorpus. Every wumpus is a impus. Every vumpus is a sterpus. Every yumpus is a numpus. Every wumpus is a rompus. Sally is a yumpus. Rex is a zumpus. Every impus is a sterpus. Sally is a dumpus. Wren is a shumpus. Rex is a wumpus. Every wumpus is a jompus. Every gorpus is a shumpus. Stella is a shumpus. Is Rex a shumpus or jompus?",
+      "chain_of_thought": [
+        "Rex is a wumpus.",
+        "Every wumpus is a jompus."
+      ],
+      "answer": "jompus"
+    }
+  },
+  "example92": {
+    "test_example": {
+      "question": "Every sterpus is a lorpus. Sally is a dumpus. Every tumpus is a vumpus. Every zumpus is a vumpus. Sally is a wumpus. Every dumpus is a lorpus. Every rompus is a shumpus. Every wumpus is a brimpus. Every vumpus is a jompus. Every gorpus is a shumpus. Every wumpus is a dumpus. Every dumpus is a sterpus. Every yumpus is a zumpus. Every dumpus is a grimpus. Every tumpus is a shumpus. Every wumpus is a impus. Every vumpus is a gorpus. Rex is a zumpus. Polly is a dumpus. Every dumpus is a lempus. Rex is a yumpus. Every yumpus is a rompus. Every numpus is a tumpus. Every rompus is a numpus. Every zumpus is a rompus. Polly is a zumpus. Every rompus is a gorpus. Is Sally a jompus or lempus?",
+      "chain_of_thought": [
+        "Sally is a dumpus.",
+        "Every dumpus is a lempus."
+      ],
+      "answer": "lempus"
+    }
+  },
+  "example93": {
+    "test_example": {
+      "question": "Every yumpus is a gorpus. Max is a wumpus. Every numpus is a grimpus. Every wumpus is a zumpus. Max is a impus. Alex is a gorpus. Every yumpus is a zumpus. Every tumpus is a impus. Every tumpus is a shumpus. Every tumpus is a lempus. Max is a dumpus. Every yumpus is a jompus. Alex is a jompus. Every dumpus is a numpus. Every shumpus is a lempus. Every yumpus is a dumpus. Every wumpus is a impus. Every rompus is a tumpus. Wren is a yumpus. Every tumpus is a jompus. Every jompus is a sterpus. Wren is a zumpus. Every yumpus is a rompus. Every wumpus is a dumpus. Every numpus is a vumpus. Every zumpus is a vumpus. Every wumpus is a numpus. Is Polly a Polly or impus?",
+      "chain_of_thought": [],
+      "answer": "Polly"
+    }
+  },
+  "example94": {
+    "test_example": {
+      "question": "Rex is a zumpus. Every jompus is a gorpus. Every zumpus is a rompus. Alex is a wumpus. Every impus is a lorpus. Max is a numpus. Every shumpus is a lempus. Every wumpus is a dumpus. Every sterpus is a wumpus. Every impus is a gorpus. Max is a vumpus. Alex is a tumpus. Alex is a yumpus. Every impus is a jompus. Every rompus is a jompus. Every gorpus is a sterpus. Rex is a jompus. Every wumpus is a vumpus. Every zumpus is a gorpus. Rex is a dumpus. Max is a zumpus. Every numpus is a wumpus. Every yumpus is a numpus. Every zumpus is a grimpus. Max is a dumpus. Every zumpus is a sterpus. Every wumpus is a numpus. Every rompus is a sterpus. Every zumpus is a dumpus. Every wumpus is a shumpus. Every rompus is a impus. Alex is a numpus. Every wumpus is a yumpus. Sam is a gorpus. Every jompus is a grimpus. Every vumpus is a shumpus. Every shumpus is a brimpus. Every vumpus is a wumpus. Every jompus is a sterpus. Is Rex a tumpus or lorpus?",
+      "chain_of_thought": [
+        "Rex is a zumpus.",
+        "Every zumpus is a rompus.",
+        "Every rompus is a impus.",
+        "Every impus is a lorpus."
+      ],
+      "answer": "lorpus"
+    }
+  },
+  "example96": {
+    "test_example": {
+      "question": "Every wumpus is a yumpus. Fae is a tumpus. Every wumpus is a dumpus. Every jompus is a lorpus. Every zumpus is a lorpus. Every gorpus is a sterpus. Every impus is a grimpus. Rex is a wumpus. Every tumpus is a brimpus. Rex is a lempus. Every zumpus is a tumpus. Every vumpus is a jompus. Every vumpus is a sterpus. Stella is a jompus. Stella is a vumpus. Every yumpus is a gorpus. Every shumpus is a brimpus. Every dumpus is a rompus. Every tumpus is a jompus. Rex is a yumpus. Fae is a zumpus. Every vumpus is a brimpus. Every dumpus is a impus. Every wumpus is a numpus. Max is a shumpus. Sam is a jompus. Every dumpus is a numpus. Every impus is a gorpus. Is Fae a brimpus or sterpus?",
+      "chain_of_thought": [
+        "Fae is a tumpus.",
+        "Every tumpus is a brimpus."
+      ],
+      "answer": "brimpus"
+    }
+  },
+  "example97": {
+    "test_example": {
+      "question": "Every shumpus is a grimpus. Wren is a tumpus. Every rompus is a impus. Every dumpus is a sterpus. Every yumpus is a vumpus. Every numpus is a lempus. Fae is a zumpus. Rex is a shumpus. Every dumpus is a numpus. Every lempus is a grimpus. Every rompus is a jompus. Rex is a lorpus. Every numpus is a vumpus. Every tumpus is a jompus. Stella is a yumpus. Every wumpus is a tumpus. Stella is a wumpus. Every zumpus is a numpus. Every wumpus is a rompus. Every wumpus is a impus. Fae is a numpus. Every zumpus is a dumpus. Wren is a impus. Fae is a shumpus. Fae is a yumpus. Every wumpus is a vumpus. Every wumpus is a gorpus. Is Stella a jompus or grimpus?",
+      "chain_of_thought": [
+        "Stella is a wumpus.",
+        "Every wumpus is a rompus.",
+        "Every rompus is a jompus."
+      ],
+      "answer": "jompus"
+    }
+  },
+  "example98": {
+    "test_example": {
+      "question": "Every yumpus is a zumpus. Every yumpus is a jompus. Stella is a numpus. Stella is a dumpus. Every dumpus is a vumpus. Stella is a tumpus. Sam is a gorpus. Every impus is a gorpus. Fae is a yumpus. Every wumpus is a vumpus. Sam is a lempus. Every impus is a grimpus. Every tumpus is a vumpus. Fae is a zumpus. Every rompus is a numpus. Every yumpus is a rompus. Every tumpus is a sterpus. Every yumpus is a impus. Sam is a shumpus. Every vumpus is a sterpus. Every rompus is a jompus. Every impus is a jompus. Every zumpus is a jompus. Every zumpus is a grimpus. Stella is a wumpus. Stella is a vumpus. Fae is a rompus. Every yumpus is a grimpus. Every rompus is a lorpus. Every yumpus is a shumpus. Every jompus is a gorpus. Sam is a jompus. Every zumpus is a rompus. Is Stella a sterpus or lorpus?",
+      "chain_of_thought": [
+        "Stella is a tumpus.",
+        "Every tumpus is a sterpus."
+      ],
+      "answer": "sterpus"
+    }
+  },
+  "example99": {
+    "test_example": {
+      "question": "Every numpus is a grimpus. Alex is a dumpus. Fae is a rompus. Every impus is a shumpus. Alex is a brimpus. Sam is a gorpus. Every dumpus is a gorpus. Alex is a zumpus. Every numpus is a impus. Fae is a yumpus. Every shumpus is a lorpus. Every jompus is a grimpus. Alex is a gorpus. Every impus is a grimpus. Every yumpus is a jompus. Every vumpus is a lempus. Fae is a wumpus. Every wumpus is a tumpus. Every wumpus is a yumpus. Every sterpus is a wumpus. Every dumpus is a sterpus. Every gorpus is a sterpus. Alex is a sterpus. Every rompus is a numpus. Every yumpus is a shumpus. Every wumpus is a zumpus. Every yumpus is a tumpus. Every tumpus is a vumpus. Sam is a sterpus. Every impus is a jompus. Every yumpus is a zumpus. Is Fae a grimpus or wumpus?",
+      "chain_of_thought": [
+        "Fae is a yumpus.",
+        "Every yumpus is a jompus.",
+        "Every jompus is a grimpus."
+      ],
+      "answer": "grimpus"
+    }
+  },
+  "example100": {
+    "test_example": {
+      "question": "Every tumpus is a jompus. Max is a wumpus. Alex is a rompus. Rex is a wumpus. Every vumpus is a sterpus. Sally is a dumpus. Sally is a zumpus. Every tumpus is a lempus. Stella is a zumpus. Every wumpus is a numpus. Sam is a grimpus. Every numpus is a vumpus. Every impus is a shumpus. Fae is a tumpus. Max is a dumpus. Every wumpus is a zumpus. Every zumpus is a gorpus. Every dumpus is a grimpus. Every vumpus is a impus. Max is a rompus. Sam is a wumpus. Fae is a numpus. Every shumpus is a lempus. Every wumpus is a yumpus. Every yumpus is a dumpus. Every yumpus is a zumpus. Rex is a zumpus. Every impus is a gorpus. Is Stella a rompus or gorpus?",
+      "chain_of_thought": [
+        "Stella is a zumpus.",
+        "Every zumpus is a gorpus."
+      ],
+      "answer": "gorpus"
+    }
+  }
+}
