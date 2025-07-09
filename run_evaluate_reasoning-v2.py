@@ -70,24 +70,23 @@ if __name__ == '__main__':
             labels_tokens = tokenizer.encode(lab, add_special_tokens=False)
             cot_tokens = tokenizer.encode(cot, add_special_tokens=False)
 
-
-            full_input = task_tokens + think
-            inp_ids = torch.tensor(full_input)
+            inp_ids = torch.tensor(task_tokens + think)
             input_ids.append(inp_ids)
 
+            full_input = task_tokens + think + cot_tokens + ans + labels_tokens + eos
             lab = torch.tensor(full_input)
-            lab[:len(task_tokens)] = -100
+            lab[:inp_ids.shape[0]] = -100
             labels.append(lab)
 
-            lab_mask = torch.ones_like(inp_ids)
-            lab_mask[:len(task_tokens)] = 0
+            lab_mask = torch.ones_like(lab)
+            lab_mask[:inp_ids.shape[0]] = 0
             labels_mask.append(lab_mask)
             attention_mask.append(torch.ones_like(inp_ids))
 
-        input_ids = pad_sequence(input_ids, padding_value=pad, batch_first=True)
-        attention_mask = pad_sequence(attention_mask, padding_value=0, batch_first=True)
-        labels = pad_sequence(labels, padding_value=pad, batch_first=True)
-        labels_mask = pad_sequence(labels_mask, padding_value=0, batch_first=True)
+        input_ids = pad_sequence(input_ids, padding_value=pad, batch_first=True, padding_side='left')
+        attention_mask = pad_sequence(attention_mask, padding_value=0, batch_first=True, padding_side='left')
+        labels = pad_sequence(labels, padding_value=-100, batch_first=True, padding_side='left')
+        labels_mask = pad_sequence(labels_mask, padding_value=0, batch_first=True, padding_side='left')
 
         collated = {'input_ids': input_ids,
                     'labels': labels,
@@ -102,7 +101,8 @@ if __name__ == '__main__':
     if args.max_cot_steps is not None:
         valid_dataset = valid_dataset.filter(lambda x: x['cot_len'] <= args.max_cot_steps)
 
-    def evaluate(model, dataset, device='cpu', bs=16, max_new_tokens=25):
+
+    def evaluate(model, dataset, device='cpu', bs=16, max_new_tokens=100):
         all_preds, all_labels = [], []
         all_preds_cot, all_labels_cot = [], []
         all_preds_ans, all_labels_ans = [], []
@@ -110,35 +110,59 @@ if __name__ == '__main__':
         for start_ind in tqdm(range(0, len(dataset), bs)):
             batch = dataset.select(range(start_ind, min(len(dataset), start_ind + bs)))
             collated = collate_fn(batch)
-            task = collated['segments'][0]
-            task = {k:v.to(device) for k,v in task.items()}
+            task = {k:v.to(device) for k,v in collated.items()}
+
+            task_length = collated['input_ids'].shape[1]
 
             with torch.no_grad():
-                preds_full = model.generate([task], max_new_tokens=max_new_tokens, pad_token_id=eos[0])
-            
-            labels = collated['labels']
-            labels_masks = labels > 0
-            labels_full = [lab[m] for lab, m in zip(labels, labels_masks)]
+                preds_full = model.generate(
+                    **task,
+                    max_new_tokens=args.max_new_tokens,
+                    pad_token_id=eos[0]
+                )
 
-            for lab_tokens, pred_tokens in zip(labels_full, preds_full):
-                lab_tokens = [t.item() for t in lab_tokens if t != bos[0]]
+            labels = collated['labels']
+            for i, (lab_tokens, pred_tokens) in enumerate(zip(labels, preds_full)):
+                labels_mask = lab_tokens != -100
+                lab_tokens = lab_tokens[labels_mask].tolist()
+
+                pred_tokens = pred_tokens[task_length:].tolist()
+                
                 ans_start_index_l = max(i for i, x in enumerate(lab_tokens) if x == ans[0])
+                ans_end_index_l = min(i for i, x in enumerate(lab_tokens) if x == eos[0])
+
                 if ans[0] in pred_tokens:
                     ans_start_index_p = max(i for i, x in enumerate(pred_tokens) if x == ans[0])
                 else:
                     ans_start_index_p = ans_start_index_l
 
-                pred_cot_tokens = pred_tokens[:ans_start_index_p].tolist()
+                if eos[0] in pred_tokens:
+                    ans_end_index_p = min(i for i, x in enumerate(pred_tokens) if x == eos[0])
+                else:
+                    ans_end_index_p = ans_end_index_l
+
+                pred_cot_tokens = pred_tokens[:ans_start_index_p]
                 lab_cot_tokens = lab_tokens[:ans_start_index_l]
+
                 all_preds_cot.append(pred_cot_tokens)
                 all_labels_cot.append(lab_cot_tokens)
-                all_preds_ans.append(pred_tokens[ans_start_index_p:].tolist())
-                all_labels_ans.append(lab_tokens[ans_start_index_l:])
-                all_preds.append(pred_tokens.tolist())
+
+                pred_and_tokens = pred_tokens[ans_start_index_p+1:ans_end_index_p]
+                lab_ans_tokens = lab_tokens[ans_start_index_l+1:ans_end_index_l]
+
+                all_preds_ans.append(pred_and_tokens)
+                all_labels_ans.append(lab_ans_tokens)
+
+                all_preds.append(pred_tokens)
                 all_labels.append(lab_tokens)
+
+            cot_correct = [p == l for p, l in zip(all_preds_cot, all_labels_cot)]
+            ans_correct = [p == l for p, l in zip(all_preds_ans, all_labels_ans)]
+
         cot_correct = [p == l for p, l in zip(all_preds_cot, all_labels_cot)]
         ans_correct = [p == l for p, l in zip(all_preds_ans, all_labels_ans)]
         res = {'accuracy_cot': np.mean(cot_correct), 'accuracy_ans': np.mean(ans_correct)}
+    
         return res
 
     logger.info("Starting evaluation...")
@@ -146,6 +170,13 @@ if __name__ == '__main__':
     model.to(device)
     model.eval()
 
-    results = evaluate(model, valid_dataset, device=device, bs=args.batch_size)
+    results = evaluate(
+        model,
+        valid_dataset,
+        device=device,
+        bs=args.batch_size,
+        max_new_tokens=args.max_new_tokens
+    )
+
     logger.info(f"Evaluation results: {results}")
     print("Evaluation results:", results) 
